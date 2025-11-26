@@ -1,0 +1,607 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+  <meta http-equiv="Content-Style-Type" content="text/css">
+  <title></title>
+  <meta name="Generator" content="Cocoa HTML Writer">
+  <meta name="CocoaVersion" content="2575.7">
+  <style type="text/css">
+    p.p1 {margin: 0.0px 0.0px 0.0px 0.0px; font: 12.0px Helvetica}
+    p.p2 {margin: 0.0px 0.0px 0.0px 0.0px; font: 12.0px Helvetica; min-height: 14.0px}
+  </style>
+</head>
+<body>
+<p class="p1">&lt;!DOCTYPE html&gt;</p>
+<p class="p1">&lt;html lang="en"&gt;</p>
+<p class="p1">&lt;head&gt;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>&lt;meta charset="UTF-8"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>&lt;meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>&lt;meta name="apple-mobile-web-app-capable" content="yes"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>&lt;meta name="mobile-web-app-capable" content="yes"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>&lt;title&gt;Digital Soybean Farm&lt;/title&gt;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>&lt;script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.min.js"&gt;&lt;/script&gt;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>&lt;style&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>* {</p>
+<p class="p1"><span class="Apple-converted-space">      </span>margin: 0;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>padding: 0;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>box-sizing: border-box;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>}</p>
+<p class="p1"><span class="Apple-converted-space">    </span>body {</p>
+<p class="p1"><span class="Apple-converted-space">      </span>overflow: hidden;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>background: #f0f0f0;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>touch-action: none;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>}</p>
+<p class="p1"><span class="Apple-converted-space">    </span>canvas {</p>
+<p class="p1"><span class="Apple-converted-space">      </span>display: block;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>}</p>
+<p class="p1"><span class="Apple-converted-space">  </span>&lt;/style&gt;</p>
+<p class="p1">&lt;/head&gt;</p>
+<p class="p1">&lt;body&gt;</p>
+<p class="p1">&lt;script&gt;</p>
+<p class="p1">let soybeans = [];</p>
+<p class="p1">let nitrogen = 0;</p>
+<p class="p1">let clicksToday = 0;</p>
+<p class="p1">let maxClicksPerDay = 15;</p>
+<p class="p1">let lastResetDate = null;</p>
+<p class="p1">let totalHarvested = 0;</p>
+<p class="p1">let tempehInProgress = false;</p>
+<p class="p1">let tempehStartTime = null;</p>
+<p class="p1">let tempehReady = false;</p>
+<p class="p1">let tempehCount = 0;</p>
+<p class="p1">let showWeatherForm = false;</p>
+<p class="p1">let weatherLog = [];</p>
+<p class="p2"><br></p>
+<p class="p1">let weatherCondition = '';</p>
+<p class="p1">let soilMoisture = '';</p>
+<p class="p1">let weatherStartTime = '';</p>
+<p class="p1">let weatherEndTime = '';</p>
+<p class="p1">let formStep = 0;</p>
+<p class="p1">let googleSheetURL = 'https://script.google.com/a/macros/mylasalle.edu.sg/s/AKfycbzVURMhwRJ0g0_lNK30Dwm3hbDuk9O1MgQmG8djoc4Cs5ZQm9Q8a64UEzNDlxWqS0ZXMA/exec';</p>
+<p class="p2"><br></p>
+<p class="p1">function setup() {</p>
+<p class="p1"><span class="Apple-converted-space">  </span>createCanvas(windowWidth, windowHeight);</p>
+<p class="p1"><span class="Apple-converted-space">  </span>checkDailyReset();</p>
+<p class="p1">}</p>
+<p class="p2"><br></p>
+<p class="p1">function windowResized() {</p>
+<p class="p1"><span class="Apple-converted-space">  </span>resizeCanvas(windowWidth, windowHeight);</p>
+<p class="p1">}</p>
+<p class="p2"><br></p>
+<p class="p1">function draw() {</p>
+<p class="p1"><span class="Apple-converted-space">  </span>drawDynamicBackground();</p>
+<p class="p2"><span class="Apple-converted-space">  </span></p>
+<p class="p1"><span class="Apple-converted-space">  </span>let soilLerp = map(constrain(nitrogen, 0, 20), 0, 20, 0, 1);</p>
+<p class="p1"><span class="Apple-converted-space">  </span>let soilR = lerp(140, 81, soilLerp);</p>
+<p class="p1"><span class="Apple-converted-space">  </span>let soilG = lerp(122, 71, soilLerp);</p>
+<p class="p1"><span class="Apple-converted-space">  </span>let soilB = lerp(107, 61, soilLerp);</p>
+<p class="p1"><span class="Apple-converted-space">  </span>fill(soilR, soilG, soilB);</p>
+<p class="p1"><span class="Apple-converted-space">  </span>noStroke();</p>
+<p class="p1"><span class="Apple-converted-space">  </span>rect(0, height * 0.7, width, height * 0.3);</p>
+<p class="p2"><span class="Apple-converted-space">  </span></p>
+<p class="p1"><span class="Apple-converted-space">  </span>for (let i = 0; i &lt; soybeans.length; i++) {</p>
+<p class="p1"><span class="Apple-converted-space">    </span>drawSoybean(soybeans[i]);</p>
+<p class="p1"><span class="Apple-converted-space">  </span>}</p>
+<p class="p2"><span class="Apple-converted-space">  </span></p>
+<p class="p1"><span class="Apple-converted-space">  </span>drawBasket();</p>
+<p class="p1"><span class="Apple-converted-space">  </span>drawTempehStation();</p>
+<p class="p1"><span class="Apple-converted-space">  </span>drawStats();</p>
+<p class="p2"><span class="Apple-converted-space">  </span></p>
+<p class="p1"><span class="Apple-converted-space">  </span>if (tempehInProgress &amp;&amp; !tempehReady) {</p>
+<p class="p1"><span class="Apple-converted-space">    </span>checkTempehProgress();</p>
+<p class="p1"><span class="Apple-converted-space">  </span>}</p>
+<p class="p2"><span class="Apple-converted-space">  </span></p>
+<p class="p1"><span class="Apple-converted-space">  </span>if (showWeatherForm) {</p>
+<p class="p1"><span class="Apple-converted-space">    </span>drawWeatherForm();</p>
+<p class="p1"><span class="Apple-converted-space">  </span>}</p>
+<p class="p1">}</p>
+<p class="p2"><br></p>
+<p class="p1">function drawDynamicBackground() {</p>
+<p class="p1"><span class="Apple-converted-space">  </span>let h = hour();</p>
+<p class="p2"><span class="Apple-converted-space">  </span></p>
+<p class="p1"><span class="Apple-converted-space">  </span>if (h &gt;= 6 &amp;&amp; h &lt; 12) {</p>
+<p class="p1"><span class="Apple-converted-space">    </span>let t = map(h, 6, 12, 0, 1);</p>
+<p class="p1"><span class="Apple-converted-space">    </span>let r = lerp(150, 125, t);</p>
+<p class="p1"><span class="Apple-converted-space">    </span>let g = lerp(180, 157, t);</p>
+<p class="p1"><span class="Apple-converted-space">    </span>let b = lerp(220, 209, t);</p>
+<p class="p1"><span class="Apple-converted-space">    </span>background(r, g, b);</p>
+<p class="p1"><span class="Apple-converted-space">  </span>} else if (h &gt;= 12 &amp;&amp; h &lt; 18) {</p>
+<p class="p1"><span class="Apple-converted-space">    </span>background(125, 157, 209);</p>
+<p class="p1"><span class="Apple-converted-space">  </span>} else if (h &gt;= 18 &amp;&amp; h &lt; 20) {</p>
+<p class="p1"><span class="Apple-converted-space">    </span>let t = map(h, 18, 20, 0, 1);</p>
+<p class="p1"><span class="Apple-converted-space">    </span>let r = lerp(125, 255, t);</p>
+<p class="p1"><span class="Apple-converted-space">    </span>let g = lerp(157, 140, t);</p>
+<p class="p1"><span class="Apple-converted-space">    </span>let b = lerp(209, 100, t);</p>
+<p class="p1"><span class="Apple-converted-space">    </span>background(r, g, b);</p>
+<p class="p1"><span class="Apple-converted-space">  </span>} else {</p>
+<p class="p1"><span class="Apple-converted-space">    </span>background(30, 40, 80);</p>
+<p class="p1"><span class="Apple-converted-space">  </span>}</p>
+<p class="p2"><span class="Apple-converted-space">  </span></p>
+<p class="p1"><span class="Apple-converted-space">  </span>noStroke();</p>
+<p class="p1"><span class="Apple-converted-space">  </span>if (h &gt;= 6 &amp;&amp; h &lt; 20) {</p>
+<p class="p1"><span class="Apple-converted-space">    </span>fill(255, 220, 100, 200);</p>
+<p class="p1"><span class="Apple-converted-space">    </span>let sunX = map(h, 6, 20, width * 0.1, width * 0.9);</p>
+<p class="p1"><span class="Apple-converted-space">    </span>let sunY = map(h, 6, 20, height * 0.3, height * 0.1);</p>
+<p class="p1"><span class="Apple-converted-space">    </span>circle(sunX, sunY, min(width, height) * 0.08);</p>
+<p class="p1"><span class="Apple-converted-space">  </span>} else {</p>
+<p class="p1"><span class="Apple-converted-space">    </span>fill(240, 240, 255, 180);</p>
+<p class="p1"><span class="Apple-converted-space">    </span>circle(width * 0.85, height * 0.12, min(width, height) * 0.06);</p>
+<p class="p1"><span class="Apple-converted-space">  </span>}</p>
+<p class="p1">}</p>
+<p class="p2"><br></p>
+<p class="p1">function drawSoybean(bean) {</p>
+<p class="p1"><span class="Apple-converted-space">  </span>push();</p>
+<p class="p1"><span class="Apple-converted-space">  </span>translate(bean.x, bean.y);</p>
+<p class="p2"><span class="Apple-converted-space">  </span></p>
+<p class="p1"><span class="Apple-converted-space">  </span>if (bean.harvested) {</p>
+<p class="p1"><span class="Apple-converted-space">    </span>let fadeAmt = frameCount - bean.harvestFrame;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>if (fadeAmt &lt; 60) {</p>
+<p class="p1"><span class="Apple-converted-space">      </span>fill(255, 255, 255, 255 - fadeAmt * 4);</p>
+<p class="p1"><span class="Apple-converted-space">      </span>noStroke();</p>
+<p class="p1"><span class="Apple-converted-space">      </span>textSize(14);</p>
+<p class="p1"><span class="Apple-converted-space">      </span>textAlign(CENTER);</p>
+<p class="p1"><span class="Apple-converted-space">      </span>text('+1 N', 0, -25);</p>
+<p class="p1"><span class="Apple-converted-space">    </span>}</p>
+<p class="p1"><span class="Apple-converted-space">    </span>pop();</p>
+<p class="p1"><span class="Apple-converted-space">    </span>return;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>}</p>
+<p class="p2"><span class="Apple-converted-space">  </span></p>
+<p class="p1"><span class="Apple-converted-space">  </span>if (bean.growth === 0) {</p>
+<p class="p1"><span class="Apple-converted-space">    </span>fill(183, 183, 171);</p>
+<p class="p1"><span class="Apple-converted-space">    </span>stroke(154, 154, 143);</p>
+<p class="p1"><span class="Apple-converted-space">    </span>strokeWeight(1);</p>
+<p class="p1"><span class="Apple-converted-space">    </span>ellipse(0, 5, 8, 10);</p>
+<p class="p1"><span class="Apple-converted-space">  </span>}</p>
+<p class="p2"><span class="Apple-converted-space">  </span></p>
+<p class="p1"><span class="Apple-converted-space">  </span>if (bean.growth &gt;= 1) {</p>
+<p class="p1"><span class="Apple-converted-space">    </span>let stemLen = 20 + (bean.growth - 1) * 10;</p>
+<p class="p2"><span class="Apple-converted-space">    </span></p>
+<p class="p1"><span class="Apple-converted-space">    </span>stroke(64, 96, 73);</p>
+<p class="p1"><span class="Apple-converted-space">    </span>strokeWeight(1.5);</p>
+<p class="p1"><span class="Apple-converted-space">    </span>noFill();</p>
+<p class="p1"><span class="Apple-converted-space">    </span>line(0, 0, 0, -stemLen);</p>
+<p class="p2"><span class="Apple-converted-space">    </span></p>
+<p class="p1"><span class="Apple-converted-space">    </span>stroke(64, 96, 73);</p>
+<p class="p1"><span class="Apple-converted-space">    </span>strokeWeight(1);</p>
+<p class="p1"><span class="Apple-converted-space">    </span>noFill();</p>
+<p class="p1"><span class="Apple-converted-space">    </span>let numLeaves = min(bean.growth + 1, 5);</p>
+<p class="p1"><span class="Apple-converted-space">    </span>let leafSize = 6 + bean.growth;</p>
+<p class="p2"><span class="Apple-converted-space">    </span></p>
+<p class="p1"><span class="Apple-converted-space">    </span>for (let i = 0; i &lt; numLeaves; i++) {</p>
+<p class="p1"><span class="Apple-converted-space">      </span>let leafPosY = -stemLen * (i + 1) / (numLeaves + 1);</p>
+<p class="p1"><span class="Apple-converted-space">      </span>let leafSide = (i % 2 === 0) ? -1 : 1;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>ellipse(leafSide * (leafSize + 2), leafPosY, leafSize * 1.8, leafSize * 1.2);</p>
+<p class="p1"><span class="Apple-converted-space">    </span>}</p>
+<p class="p2"><span class="Apple-converted-space">    </span></p>
+<p class="p1"><span class="Apple-converted-space">    </span>if (bean.growth &gt;= 5) {</p>
+<p class="p1"><span class="Apple-converted-space">      </span>stroke(180, 150, 80);</p>
+<p class="p1"><span class="Apple-converted-space">      </span>strokeWeight(1);</p>
+<p class="p1"><span class="Apple-converted-space">      </span>fill(220, 200, 120);</p>
+<p class="p1"><span class="Apple-converted-space">      </span>let numPods = bean.growth - 4;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>for (let j = 0; j &lt; numPods; j++) {</p>
+<p class="p1"><span class="Apple-converted-space">        </span>let podPosY = -stemLen * 0.5 - j * 10;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>let podSide = (j % 2 === 0) ? 1 : -1;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>ellipse(podSide * 6, podPosY, 6, 10);</p>
+<p class="p1"><span class="Apple-converted-space">      </span>}</p>
+<p class="p1"><span class="Apple-converted-space">    </span>}</p>
+<p class="p2"><span class="Apple-converted-space">    </span></p>
+<p class="p1"><span class="Apple-converted-space">    </span>if (bean.growth &gt;= 3 &amp;&amp; bean.growth &lt;= 4) {</p>
+<p class="p1"><span class="Apple-converted-space">      </span>stroke(200, 150, 200);</p>
+<p class="p1"><span class="Apple-converted-space">      </span>strokeWeight(1);</p>
+<p class="p1"><span class="Apple-converted-space">      </span>fill(255, 220, 255);</p>
+<p class="p1"><span class="Apple-converted-space">      </span>let flowerPosY = -stemLen * 0.7;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>for (let k = 0; k &lt; 4; k++) {</p>
+<p class="p1"><span class="Apple-converted-space">        </span>let angle = k * TWO_PI / 4;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>let petalX = cos(angle) * 3;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>let petalY = flowerPosY + sin(angle) * 3;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>circle(petalX, petalY, 4);</p>
+<p class="p1"><span class="Apple-converted-space">      </span>}</p>
+<p class="p1"><span class="Apple-converted-space">    </span>}</p>
+<p class="p1"><span class="Apple-converted-space">  </span>}</p>
+<p class="p2"><span class="Apple-converted-space">  </span></p>
+<p class="p1"><span class="Apple-converted-space">  </span>fill(255);</p>
+<p class="p1"><span class="Apple-converted-space">  </span>noStroke();</p>
+<p class="p1"><span class="Apple-converted-space">  </span>textSize(11);</p>
+<p class="p1"><span class="Apple-converted-space">  </span>textAlign(CENTER);</p>
+<p class="p1"><span class="Apple-converted-space">  </span>text(bean.growth, 0, 20);</p>
+<p class="p2"><span class="Apple-converted-space">  </span></p>
+<p class="p1"><span class="Apple-converted-space">  </span>pop();</p>
+<p class="p1">}</p>
+<p class="p2"><br></p>
+<p class="p1">function drawBasket() {</p>
+<p class="p1"><span class="Apple-converted-space">  </span>let bx = width - min(width * 0.15, 120);</p>
+<p class="p1"><span class="Apple-converted-space">  </span>let by = height - min(height * 0.2, 120);</p>
+<p class="p1"><span class="Apple-converted-space">  </span>let scale = min(width, height) / 800;</p>
+<p class="p2"><span class="Apple-converted-space">  </span></p>
+<p class="p1"><span class="Apple-converted-space">  </span>stroke(139, 90, 43);</p>
+<p class="p1"><span class="Apple-converted-space">  </span>strokeWeight(2);</p>
+<p class="p1"><span class="Apple-converted-space">  </span>fill(160, 120, 80);</p>
+<p class="p1"><span class="Apple-converted-space">  </span>beginShape();</p>
+<p class="p1"><span class="Apple-converted-space">  </span>vertex(bx - 40 * scale, by);</p>
+<p class="p1"><span class="Apple-converted-space">  </span>vertex(bx - 35 * scale, by - 40 * scale);</p>
+<p class="p1"><span class="Apple-converted-space">  </span>vertex(bx + 35 * scale, by - 40 * scale);</p>
+<p class="p1"><span class="Apple-converted-space">  </span>vertex(bx + 40 * scale, by);</p>
+<p class="p1"><span class="Apple-converted-space">  </span>endShape(CLOSE);</p>
+<p class="p2"><span class="Apple-converted-space">  </span></p>
+<p class="p1"><span class="Apple-converted-space">  </span>stroke(120, 80, 50);</p>
+<p class="p1"><span class="Apple-converted-space">  </span>strokeWeight(1);</p>
+<p class="p1"><span class="Apple-converted-space">  </span>for (let i = 0; i &lt; 4; i++) {</p>
+<p class="p1"><span class="Apple-converted-space">    </span>let y = by - 10 * scale - i * 8 * scale;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>line(bx - 35 * scale + i * 2 * scale, y, bx + 35 * scale - i * 2 * scale, y);</p>
+<p class="p1"><span class="Apple-converted-space">  </span>}</p>
+<p class="p1"><span class="Apple-converted-space">  </span>for (let j = 0; j &lt; 8; j++) {</p>
+<p class="p1"><span class="Apple-converted-space">    </span>let x = bx - 30 * scale + j * 10 * scale;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>line(x, by - 5 * scale, x, by - 35 * scale);</p>
+<p class="p1"><span class="Apple-converted-space">  </span>}</p>
+<p class="p2"><span class="Apple-converted-space">  </span></p>
+<p class="p1"><span class="Apple-converted-space">  </span>let harvestedCount = 0;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>for (let m = 0; m &lt; soybeans.length; m++) {</p>
+<p class="p1"><span class="Apple-converted-space">    </span>if (soybeans[m].harvested) {</p>
+<p class="p1"><span class="Apple-converted-space">      </span>harvestedCount++;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>}</p>
+<p class="p1"><span class="Apple-converted-space">  </span>}</p>
+<p class="p2"><span class="Apple-converted-space">  </span></p>
+<p class="p1"><span class="Apple-converted-space">  </span>fill(220, 200, 120);</p>
+<p class="p1"><span class="Apple-converted-space">  </span>stroke(180, 150, 80);</p>
+<p class="p1"><span class="Apple-converted-space">  </span>strokeWeight(1);</p>
+<p class="p2"><span class="Apple-converted-space">  </span></p>
+<p class="p1"><span class="Apple-converted-space">  </span>let beansToShow = min(harvestedCount, 20);</p>
+<p class="p1"><span class="Apple-converted-space">  </span>for (let n = 0; n &lt; beansToShow; n++) {</p>
+<p class="p1"><span class="Apple-converted-space">    </span>let beanX = bx - 25 * scale + (n % 6) * 10 * scale + random(-2, 2);</p>
+<p class="p1"><span class="Apple-converted-space">    </span>let beanY = by - 10 * scale - floor(n / 6) * 8 * scale;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>ellipse(beanX, beanY, 8 * scale, 6 * scale);</p>
+<p class="p1"><span class="Apple-converted-space">  </span>}</p>
+<p class="p2"><span class="Apple-converted-space">  </span></p>
+<p class="p1"><span class="Apple-converted-space">  </span>fill(255);</p>
+<p class="p1"><span class="Apple-converted-space">  </span>stroke(0);</p>
+<p class="p1"><span class="Apple-converted-space">  </span>strokeWeight(3);</p>
+<p class="p1"><span class="Apple-converted-space">  </span>textAlign(CENTER);</p>
+<p class="p1"><span class="Apple-converted-space">  </span>textSize(14 * scale);</p>
+<p class="p1"><span class="Apple-converted-space">  </span>text('Harvest: ' + harvestedCount, bx, by + 25 * scale);</p>
+<p class="p1">}</p>
+<p class="p2"><br></p>
+<p class="p1">function drawTempehStation() {</p>
+<p class="p1"><span class="Apple-converted-space">  </span>let tx = width - min(width * 0.15, 120);</p>
+<p class="p1"><span class="Apple-converted-space">  </span>let ty = height - min(height * 0.2, 120);</p>
+<p class="p1"><span class="Apple-converted-space">  </span>let scale = min(width, height) / 800;</p>
+<p class="p2"><span class="Apple-converted-space">  </span></p>
+<p class="p1"><span class="Apple-converted-space">  </span>stroke(101, 67, 33);</p>
+<p class="p1"><span class="Apple-converted-space">  </span>strokeWeight(2);</p>
+<p class="p1"><span class="Apple-converted-space">  </span>fill(139, 90, 43);</p>
+<p class="p1"><span class="Apple-converted-space">  </span>rect(tx + 60 * scale, ty - 50 * scale, 100 * scale, 8 * scale);</p>
+<p class="p1"><span class="Apple-converted-space">  </span>rect(tx + 65 * scale, ty - 42 * scale, 5 * scale, 30 * scale);</p>
+<p class="p1"><span class="Apple-converted-space">  </span>rect(tx + 150 * scale, ty - 42 * scale, 5 * scale, 30 * scale);</p>
+<p class="p2"><span class="Apple-converted-space">  </span></p>
+<p class="p1"><span class="Apple-converted-space">  </span>fill(255);</p>
+<p class="p1"><span class="Apple-converted-space">  </span>stroke(0);</p>
+<p class="p1"><span class="Apple-converted-space">  </span>strokeWeight(2);</p>
+<p class="p1"><span class="Apple-converted-space">  </span>textAlign(CENTER);</p>
+<p class="p1"><span class="Apple-converted-space">  </span>textSize(12 * scale);</p>
+<p class="p1"><span class="Apple-converted-space">  </span>text('Tempeh Station', tx + 110 * scale, ty - 60 * scale);</p>
+<p class="p2"><span class="Apple-converted-space">  </span></p>
+<p class="p1"><span class="Apple-converted-space">  </span>noStroke();</p>
+<p class="p1"><span class="Apple-converted-space">  </span>textSize(10 * scale);</p>
+<p class="p2"><span class="Apple-converted-space">  </span></p>
+<p class="p1"><span class="Apple-converted-space">  </span>if (tempehReady) {</p>
+<p class="p1"><span class="Apple-converted-space">    </span>fill(0, 255, 0);</p>
+<p class="p1"><span class="Apple-converted-space">    </span>text('Tempeh Ready!', tx + 110 * scale, ty - 10 * scale);</p>
+<p class="p1"><span class="Apple-converted-space">    </span>text('Count: ' + tempehCount, tx + 110 * scale, ty + 5 * scale);</p>
+<p class="p1"><span class="Apple-converted-space">  </span>} else if (tempehInProgress) {</p>
+<p class="p1"><span class="Apple-converted-space">    </span>let elapsed = millis() - tempehStartTime;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>let remaining = 7200000 - elapsed;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>let minutesLeft = floor(remaining / 60000);</p>
+<p class="p1"><span class="Apple-converted-space">    </span>fill(255, 200, 0);</p>
+<p class="p1"><span class="Apple-converted-space">    </span>text('Fermenting...', tx + 110 * scale, ty - 10 * scale);</p>
+<p class="p1"><span class="Apple-converted-space">    </span>text(minutesLeft + ' min left', tx + 110 * scale, ty + 5 * scale);</p>
+<p class="p1"><span class="Apple-converted-space">  </span>} else {</p>
+<p class="p1"><span class="Apple-converted-space">    </span>fill(150);</p>
+<p class="p1"><span class="Apple-converted-space">    </span>text('Need 30 beans', tx + 110 * scale, ty - 10 * scale);</p>
+<p class="p1"><span class="Apple-converted-space">    </span>text('to make tempeh', tx + 110 * scale, ty + 5 * scale);</p>
+<p class="p1"><span class="Apple-converted-space">  </span>}</p>
+<p class="p1">}</p>
+<p class="p2"><br></p>
+<p class="p1">function drawStats() {</p>
+<p class="p1"><span class="Apple-converted-space">  </span>let scale = min(width, height) / 800;</p>
+<p class="p2"><span class="Apple-converted-space">  </span></p>
+<p class="p1"><span class="Apple-converted-space">  </span>textAlign(CENTER);</p>
+<p class="p1"><span class="Apple-converted-space">  </span>fill(255);</p>
+<p class="p1"><span class="Apple-converted-space">  </span>stroke(0);</p>
+<p class="p1"><span class="Apple-converted-space">  </span>strokeWeight(4);</p>
+<p class="p1"><span class="Apple-converted-space">  </span>textSize(22 * scale);</p>
+<p class="p1"><span class="Apple-converted-space">  </span>text('Digital Soybean Farm', width / 2, 35 * scale);</p>
+<p class="p2"><span class="Apple-converted-space">  </span></p>
+<p class="p1"><span class="Apple-converted-space">  </span>strokeWeight(3);</p>
+<p class="p1"><span class="Apple-converted-space">  </span>textSize(16 * scale);</p>
+<p class="p1"><span class="Apple-converted-space">  </span>text('Click to plant &amp; grow!', width / 2, 60 * scale);</p>
+<p class="p2"><span class="Apple-converted-space">  </span></p>
+<p class="p1"><span class="Apple-converted-space">  </span>fill(255, 255, 255, 200);</p>
+<p class="p1"><span class="Apple-converted-space">  </span>stroke(0);</p>
+<p class="p1"><span class="Apple-converted-space">  </span>strokeWeight(2);</p>
+<p class="p1"><span class="Apple-converted-space">  </span>rect(20 * scale, 85 * scale, 200 * scale, 110 * scale, 10 * scale);</p>
+<p class="p2"><span class="Apple-converted-space">  </span></p>
+<p class="p1"><span class="Apple-converted-space">  </span>let activeCount = 0;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>let harvestedCount = 0;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>for (let i = 0; i &lt; soybeans.length; i++) {</p>
+<p class="p1"><span class="Apple-converted-space">    </span>if (soybeans[i].harvested) {</p>
+<p class="p1"><span class="Apple-converted-space">      </span>harvestedCount++;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>} else {</p>
+<p class="p1"><span class="Apple-converted-space">      </span>activeCount++;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>}</p>
+<p class="p1"><span class="Apple-converted-space">  </span>}</p>
+<p class="p2"><span class="Apple-converted-space">  </span></p>
+<p class="p1"><span class="Apple-converted-space">  </span>fill(0);</p>
+<p class="p1"><span class="Apple-converted-space">  </span>noStroke();</p>
+<p class="p1"><span class="Apple-converted-space">  </span>textAlign(LEFT);</p>
+<p class="p1"><span class="Apple-converted-space">  </span>textSize(16 * scale);</p>
+<p class="p1"><span class="Apple-converted-space">  </span>text('Active Plants: ' + activeCount, 35 * scale, 110 * scale);</p>
+<p class="p1"><span class="Apple-converted-space">  </span>text('Harvested: ' + harvestedCount, 35 * scale, 130 * scale);</p>
+<p class="p1"><span class="Apple-converted-space">  </span>text('Nitrogen (N): ' + nitrogen, 35 * scale, 150 * scale);</p>
+<p class="p1"><span class="Apple-converted-space">  </span>text('Clicks Today: ' + clicksToday + '/' + maxClicksPerDay, 35 * scale, 170 * scale);</p>
+<p class="p1"><span class="Apple-converted-space">  </span>text('Total Harvest: ' + totalHarvested, 35 * scale, 190 * scale);</p>
+<p class="p1">}</p>
+<p class="p2"><br></p>
+<p class="p1">function drawWeatherForm() {</p>
+<p class="p1"><span class="Apple-converted-space">  </span>fill(0, 0, 0, 150);</p>
+<p class="p1"><span class="Apple-converted-space">  </span>noStroke();</p>
+<p class="p1"><span class="Apple-converted-space">  </span>rect(0, 0, width, height);</p>
+<p class="p2"><span class="Apple-converted-space">  </span></p>
+<p class="p1"><span class="Apple-converted-space">  </span>let scale = min(width, height) / 800;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>let boxW = 400 * scale;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>let boxH = 300 * scale;</p>
+<p class="p2"><span class="Apple-converted-space">  </span></p>
+<p class="p1"><span class="Apple-converted-space">  </span>fill(255);</p>
+<p class="p1"><span class="Apple-converted-space">  </span>stroke(0);</p>
+<p class="p1"><span class="Apple-converted-space">  </span>strokeWeight(3);</p>
+<p class="p1"><span class="Apple-converted-space">  </span>rect(width/2 - boxW/2, height/2 - boxH/2, boxW, boxH, 10);</p>
+<p class="p2"><span class="Apple-converted-space">  </span></p>
+<p class="p1"><span class="Apple-converted-space">  </span>fill(0);</p>
+<p class="p1"><span class="Apple-converted-space">  </span>noStroke();</p>
+<p class="p1"><span class="Apple-converted-space">  </span>textAlign(CENTER);</p>
+<p class="p1"><span class="Apple-converted-space">  </span>textSize(20 * scale);</p>
+<p class="p1"><span class="Apple-converted-space">  </span>text('Daily Limit Reached!', width/2, height/2 - boxH/2 + 40 * scale);</p>
+<p class="p2"><span class="Apple-converted-space">  </span></p>
+<p class="p1"><span class="Apple-converted-space">  </span>textSize(16 * scale);</p>
+<p class="p1"><span class="Apple-converted-space">  </span>text('Please log today\'s conditions:', width/2, height/2 - boxH/2 + 70 * scale);</p>
+<p class="p2"><span class="Apple-converted-space">  </span></p>
+<p class="p1"><span class="Apple-converted-space">  </span>textSize(14 * scale);</p>
+<p class="p1"><span class="Apple-converted-space">  </span>textAlign(CENTER);</p>
+<p class="p2"><span class="Apple-converted-space">  </span></p>
+<p class="p1"><span class="Apple-converted-space">  </span>if (formStep === 0) {</p>
+<p class="p1"><span class="Apple-converted-space">    </span>text('Select Weather Condition:', width/2, height/2 - 30 * scale);</p>
+<p class="p1"><span class="Apple-converted-space">    </span>drawButton('Sunny', width/2 - 150 * scale, height/2, 60 * scale, 30 * scale, scale);</p>
+<p class="p1"><span class="Apple-converted-space">    </span>drawButton('Rainy', width/2 - 70 * scale, height/2, 60 * scale, 30 * scale, scale);</p>
+<p class="p1"><span class="Apple-converted-space">    </span>drawButton('Cloudy', width/2 + 10 * scale, height/2, 60 * scale, 30 * scale, scale);</p>
+<p class="p1"><span class="Apple-converted-space">    </span>drawButton('Windy', width/2 + 90 * scale, height/2, 60 * scale, 30 * scale, scale);</p>
+<p class="p1"><span class="Apple-converted-space">  </span>}</p>
+<p class="p2"><span class="Apple-converted-space">  </span></p>
+<p class="p1"><span class="Apple-converted-space">  </span>if (formStep === 1) {</p>
+<p class="p1"><span class="Apple-converted-space">    </span>text('Weather: ' + weatherCondition, width/2, height/2 - 50 * scale);</p>
+<p class="p1"><span class="Apple-converted-space">    </span>text('Select Soil Moisture:', width/2, height/2 - 10 * scale);</p>
+<p class="p1"><span class="Apple-converted-space">    </span>drawButton('Dry', width/2 - 90 * scale, height/2 + 20 * scale, 80 * scale, 30 * scale, scale);</p>
+<p class="p1"><span class="Apple-converted-space">    </span>drawButton('Perfect', width/2, height/2 + 20 * scale, 80 * scale, 30 * scale, scale);</p>
+<p class="p1"><span class="Apple-converted-space">    </span>drawButton('Too Moist', width/2 + 90 * scale, height/2 + 20 * scale, 80 * scale, 30 * scale, scale);</p>
+<p class="p1"><span class="Apple-converted-space">  </span>}</p>
+<p class="p2"><span class="Apple-converted-space">  </span></p>
+<p class="p1"><span class="Apple-converted-space">  </span>if (formStep === 2) {</p>
+<p class="p1"><span class="Apple-converted-space">    </span>text('Weather: ' + weatherCondition, width/2, height/2 - 60 * scale);</p>
+<p class="p1"><span class="Apple-converted-space">    </span>text('Soil: ' + soilMoisture, width/2, height/2 - 40 * scale);</p>
+<p class="p1"><span class="Apple-converted-space">    </span>text('Enter Time Range:', width/2, height/2 - 10 * scale);</p>
+<p class="p1"><span class="Apple-converted-space">    </span>text('Start Time (e.g., 08:00):', width/2 - 80 * scale, height/2 + 20 * scale);</p>
+<p class="p1"><span class="Apple-converted-space">    </span>text('End Time (e.g., 17:00):', width/2 - 80 * scale, height/2 + 60 * scale);</p>
+<p class="p2"><span class="Apple-converted-space">    </span></p>
+<p class="p1"><span class="Apple-converted-space">    </span>fill(240);</p>
+<p class="p1"><span class="Apple-converted-space">    </span>stroke(0);</p>
+<p class="p1"><span class="Apple-converted-space">    </span>strokeWeight(2);</p>
+<p class="p1"><span class="Apple-converted-space">    </span>rect(width/2 + 20 * scale, height/2 + 5 * scale, 100 * scale, 25 * scale);</p>
+<p class="p1"><span class="Apple-converted-space">    </span>rect(width/2 + 20 * scale, height/2 + 45 * scale, 100 * scale, 25 * scale);</p>
+<p class="p2"><span class="Apple-converted-space">    </span></p>
+<p class="p1"><span class="Apple-converted-space">    </span>fill(0);</p>
+<p class="p1"><span class="Apple-converted-space">    </span>noStroke();</p>
+<p class="p1"><span class="Apple-converted-space">    </span>textAlign(LEFT);</p>
+<p class="p1"><span class="Apple-converted-space">    </span>text(weatherStartTime + '_', width/2 + 25 * scale, height/2 + 22 * scale);</p>
+<p class="p1"><span class="Apple-converted-space">    </span>text(weatherEndTime + '_', width/2 + 25 * scale, height/2 + 62 * scale);</p>
+<p class="p2"><span class="Apple-converted-space">    </span></p>
+<p class="p1"><span class="Apple-converted-space">    </span>textAlign(CENTER);</p>
+<p class="p1"><span class="Apple-converted-space">    </span>textSize(12 * scale);</p>
+<p class="p1"><span class="Apple-converted-space">    </span>text('Press ENTER when done', width/2, height/2 + 100 * scale);</p>
+<p class="p1"><span class="Apple-converted-space">  </span>}</p>
+<p class="p1">}</p>
+<p class="p2"><br></p>
+<p class="p1">function drawButton(label, x, y, w, h, scale) {</p>
+<p class="p1"><span class="Apple-converted-space">  </span>push();</p>
+<p class="p1"><span class="Apple-converted-space">  </span>fill(100, 200, 100);</p>
+<p class="p1"><span class="Apple-converted-space">  </span>stroke(0);</p>
+<p class="p1"><span class="Apple-converted-space">  </span>strokeWeight(2);</p>
+<p class="p1"><span class="Apple-converted-space">  </span>rect(x - w/2, y - h/2, w, h, 5);</p>
+<p class="p2"><span class="Apple-converted-space">  </span></p>
+<p class="p1"><span class="Apple-converted-space">  </span>fill(255);</p>
+<p class="p1"><span class="Apple-converted-space">  </span>noStroke();</p>
+<p class="p1"><span class="Apple-converted-space">  </span>textAlign(CENTER, CENTER);</p>
+<p class="p1"><span class="Apple-converted-space">  </span>textSize(12 * scale);</p>
+<p class="p1"><span class="Apple-converted-space">  </span>text(label, x, y);</p>
+<p class="p1"><span class="Apple-converted-space">  </span>pop();</p>
+<p class="p1">}</p>
+<p class="p2"><br></p>
+<p class="p1">function checkDailyReset() {</p>
+<p class="p1"><span class="Apple-converted-space">  </span>let today = day() + '/' + month() + '/' + year();</p>
+<p class="p2"><span class="Apple-converted-space">  </span></p>
+<p class="p1"><span class="Apple-converted-space">  </span>if (lastResetDate !== today) {</p>
+<p class="p1"><span class="Apple-converted-space">    </span>clicksToday = 0;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>lastResetDate = today;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>showWeatherForm = false;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>}</p>
+<p class="p1">}</p>
+<p class="p2"><br></p>
+<p class="p1">function checkTempehProgress() {</p>
+<p class="p1"><span class="Apple-converted-space">  </span>let elapsed = millis() - tempehStartTime;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>if (elapsed &gt;= 7200000) {</p>
+<p class="p1"><span class="Apple-converted-space">    </span>tempehReady = true;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>tempehInProgress = false;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>tempehCount++;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>}</p>
+<p class="p1">}</p>
+<p class="p2"><br></p>
+<p class="p1">function mousePressed() {</p>
+<p class="p1"><span class="Apple-converted-space">  </span>checkDailyReset();</p>
+<p class="p2"><span class="Apple-converted-space">  </span></p>
+<p class="p1"><span class="Apple-converted-space">  </span>if (showWeatherForm) {</p>
+<p class="p1"><span class="Apple-converted-space">    </span>handleFormClick();</p>
+<p class="p1"><span class="Apple-converted-space">    </span>return;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>}</p>
+<p class="p2"><span class="Apple-converted-space">  </span></p>
+<p class="p1"><span class="Apple-converted-space">  </span>if (clicksToday &gt;= maxClicksPerDay) {</p>
+<p class="p1"><span class="Apple-converted-space">    </span>showWeatherForm = true;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>formStep = 0;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>return;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>}</p>
+<p class="p2"><span class="Apple-converted-space">  </span></p>
+<p class="p1"><span class="Apple-converted-space">  </span>if (mouseY &gt; height * 0.7 - 50 &amp;&amp; mouseY &lt; height) {</p>
+<p class="p1"><span class="Apple-converted-space">    </span>soybeans.push({</p>
+<p class="p1"><span class="Apple-converted-space">      </span>x: mouseX,</p>
+<p class="p1"><span class="Apple-converted-space">      </span>y: height * 0.7 + 20,</p>
+<p class="p1"><span class="Apple-converted-space">      </span>growth: 0,</p>
+<p class="p1"><span class="Apple-converted-space">      </span>harvested: false,</p>
+<p class="p1"><span class="Apple-converted-space">      </span>harvestFrame: 0</p>
+<p class="p1"><span class="Apple-converted-space">    </span>});</p>
+<p class="p1"><span class="Apple-converted-space">  </span>}</p>
+<p class="p2"><span class="Apple-converted-space">  </span></p>
+<p class="p1"><span class="Apple-converted-space">  </span>for (let i = 0; i &lt; soybeans.length; i++) {</p>
+<p class="p1"><span class="Apple-converted-space">    </span>if (!soybeans[i].harvested &amp;&amp; soybeans[i].growth &lt; 7) {</p>
+<p class="p1"><span class="Apple-converted-space">      </span>soybeans[i].growth++;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>if (soybeans[i].growth === 7) {</p>
+<p class="p1"><span class="Apple-converted-space">        </span>soybeans[i].harvested = true;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>soybeans[i].harvestFrame = frameCount;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>nitrogen++;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>totalHarvested++;</p>
+<p class="p2"><span class="Apple-converted-space">        </span></p>
+<p class="p1"><span class="Apple-converted-space">        </span>if (totalHarvested &gt;= 30 &amp;&amp; !tempehInProgress &amp;&amp; !tempehReady) {</p>
+<p class="p1"><span class="Apple-converted-space">          </span>tempehInProgress = true;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>tempehStartTime = millis();</p>
+<p class="p1"><span class="Apple-converted-space">          </span>totalHarvested = 0;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>}</p>
+<p class="p1"><span class="Apple-converted-space">      </span>}</p>
+<p class="p1"><span class="Apple-converted-space">    </span>}</p>
+<p class="p1"><span class="Apple-converted-space">  </span>}</p>
+<p class="p2"><span class="Apple-converted-space">  </span></p>
+<p class="p1"><span class="Apple-converted-space">  </span>clicksToday++;</p>
+<p class="p2"><span class="Apple-converted-space">  </span></p>
+<p class="p1"><span class="Apple-converted-space">  </span>if (clicksToday &gt;= maxClicksPerDay) {</p>
+<p class="p1"><span class="Apple-converted-space">    </span>showWeatherForm = true;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>formStep = 0;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>}</p>
+<p class="p1">}</p>
+<p class="p2"><br></p>
+<p class="p1">function handleFormClick() {</p>
+<p class="p1"><span class="Apple-converted-space">  </span>let mx = mouseX;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>let my = mouseY;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>let scale = min(width, height) / 800;</p>
+<p class="p2"><span class="Apple-converted-space">  </span></p>
+<p class="p1"><span class="Apple-converted-space">  </span>if (formStep === 0) {</p>
+<p class="p1"><span class="Apple-converted-space">    </span>if (my &gt; height/2 - 15 * scale &amp;&amp; my &lt; height/2 + 15 * scale) {</p>
+<p class="p1"><span class="Apple-converted-space">      </span>if (mx &gt; width/2 - 180 * scale &amp;&amp; mx &lt; width/2 - 120 * scale) {</p>
+<p class="p1"><span class="Apple-converted-space">        </span>weatherCondition = 'Sunny';</p>
+<p class="p1"><span class="Apple-converted-space">        </span>formStep = 1;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>} else if (mx &gt; width/2 - 100 * scale &amp;&amp; mx &lt; width/2 - 40 * scale) {</p>
+<p class="p1"><span class="Apple-converted-space">        </span>weatherCondition = 'Rainy';</p>
+<p class="p1"><span class="Apple-converted-space">        </span>formStep = 1;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>} else if (mx &gt; width/2 - 20 * scale &amp;&amp; mx &lt; width/2 + 40 * scale) {</p>
+<p class="p1"><span class="Apple-converted-space">        </span>weatherCondition = 'Cloudy';</p>
+<p class="p1"><span class="Apple-converted-space">        </span>formStep = 1;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>} else if (mx &gt; width/2 + 60 * scale &amp;&amp; mx &lt; width/2 + 120 * scale) {</p>
+<p class="p1"><span class="Apple-converted-space">        </span>weatherCondition = 'Windy';</p>
+<p class="p1"><span class="Apple-converted-space">        </span>formStep = 1;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>}</p>
+<p class="p1"><span class="Apple-converted-space">    </span>}</p>
+<p class="p1"><span class="Apple-converted-space">  </span>}</p>
+<p class="p2"><span class="Apple-converted-space">  </span></p>
+<p class="p1"><span class="Apple-converted-space">  </span>if (formStep === 1) {</p>
+<p class="p1"><span class="Apple-converted-space">    </span>if (my &gt; height/2 + 5 * scale &amp;&amp; my &lt; height/2 + 35 * scale) {</p>
+<p class="p1"><span class="Apple-converted-space">      </span>if (mx &gt; width/2 - 130 * scale &amp;&amp; mx &lt; width/2 - 50 * scale) {</p>
+<p class="p1"><span class="Apple-converted-space">        </span>soilMoisture = 'Dry';</p>
+<p class="p1"><span class="Apple-converted-space">        </span>formStep = 2;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>} else if (mx &gt; width/2 - 40 * scale &amp;&amp; mx &lt; width/2 + 40 * scale) {</p>
+<p class="p1"><span class="Apple-converted-space">        </span>soilMoisture = 'Perfect';</p>
+<p class="p1"><span class="Apple-converted-space">        </span>formStep = 2;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>} else if (mx &gt; width/2 + 50 * scale &amp;&amp; mx &lt; width/2 + 130 * scale) {</p>
+<p class="p1"><span class="Apple-converted-space">        </span>soilMoisture = 'Too Moist';</p>
+<p class="p1"><span class="Apple-converted-space">        </span>formStep = 2;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>}</p>
+<p class="p1"><span class="Apple-converted-space">    </span>}</p>
+<p class="p1"><span class="Apple-converted-space">  </span>}</p>
+<p class="p1">}</p>
+<p class="p2"><br></p>
+<p class="p1">function keyPressed() {</p>
+<p class="p1"><span class="Apple-converted-space">  </span>if (showWeatherForm &amp;&amp; formStep === 2) {</p>
+<p class="p1"><span class="Apple-converted-space">    </span>if (weatherStartTime.length &lt; 5) {</p>
+<p class="p1"><span class="Apple-converted-space">      </span>if (key &gt;= '0' &amp;&amp; key &lt;= '9') {</p>
+<p class="p1"><span class="Apple-converted-space">        </span>weatherStartTime += key;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>}</p>
+<p class="p1"><span class="Apple-converted-space">      </span>if (key === ':' &amp;&amp; weatherStartTime.length === 2) {</p>
+<p class="p1"><span class="Apple-converted-space">        </span>weatherStartTime += ':';</p>
+<p class="p1"><span class="Apple-converted-space">      </span>}</p>
+<p class="p1"><span class="Apple-converted-space">    </span>} else if (weatherEndTime.length &lt; 5) {</p>
+<p class="p1"><span class="Apple-converted-space">      </span>if (key &gt;= '0' &amp;&amp; key &lt;= '9') {</p>
+<p class="p1"><span class="Apple-converted-space">        </span>weatherEndTime += key;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>}</p>
+<p class="p1"><span class="Apple-converted-space">      </span>if (key === ':' &amp;&amp; weatherEndTime.length === 2) {</p>
+<p class="p1"><span class="Apple-converted-space">        </span>weatherEndTime += ':';</p>
+<p class="p1"><span class="Apple-converted-space">      </span>}</p>
+<p class="p1"><span class="Apple-converted-space">    </span>}</p>
+<p class="p2"><span class="Apple-converted-space">    </span></p>
+<p class="p1"><span class="Apple-converted-space">    </span>if (keyCode === BACKSPACE) {</p>
+<p class="p1"><span class="Apple-converted-space">      </span>if (weatherEndTime.length &gt; 0) {</p>
+<p class="p1"><span class="Apple-converted-space">        </span>weatherEndTime = weatherEndTime.slice(0, -1);</p>
+<p class="p1"><span class="Apple-converted-space">      </span>} else if (weatherStartTime.length &gt; 0) {</p>
+<p class="p1"><span class="Apple-converted-space">        </span>weatherStartTime = weatherStartTime.slice(0, -1);</p>
+<p class="p1"><span class="Apple-converted-space">      </span>}</p>
+<p class="p1"><span class="Apple-converted-space">    </span>}</p>
+<p class="p2"><span class="Apple-converted-space">    </span></p>
+<p class="p1"><span class="Apple-converted-space">    </span>if (keyCode === ENTER &amp;&amp; weatherStartTime.length === 5 &amp;&amp; weatherEndTime.length === 5) {</p>
+<p class="p1"><span class="Apple-converted-space">      </span>let logEntry = {</p>
+<p class="p1"><span class="Apple-converted-space">        </span>date: day() + '/' + month() + '/' + year(),</p>
+<p class="p1"><span class="Apple-converted-space">        </span>weather: weatherCondition,</p>
+<p class="p1"><span class="Apple-converted-space">        </span>soil: soilMoisture,</p>
+<p class="p1"><span class="Apple-converted-space">        </span>timeStart: weatherStartTime,</p>
+<p class="p1"><span class="Apple-converted-space">        </span>timeEnd: weatherEndTime,</p>
+<p class="p1"><span class="Apple-converted-space">        </span>clicks: clicksToday,</p>
+<p class="p1"><span class="Apple-converted-space">        </span>harvested: nitrogen</p>
+<p class="p1"><span class="Apple-converted-space">      </span>};</p>
+<p class="p1"><span class="Apple-converted-space">      </span>weatherLog.push(logEntry);</p>
+<p class="p2"><span class="Apple-converted-space">      </span></p>
+<p class="p1"><span class="Apple-converted-space">      </span>sendToGoogleSheets(logEntry);</p>
+<p class="p2"><span class="Apple-converted-space">      </span></p>
+<p class="p1"><span class="Apple-converted-space">      </span>console.log('Weather Log Saved:', logEntry);</p>
+<p class="p1"><span class="Apple-converted-space">      </span>console.log('All Logs:', weatherLog);</p>
+<p class="p2"><span class="Apple-converted-space">      </span></p>
+<p class="p1"><span class="Apple-converted-space">      </span>showWeatherForm = false;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>formStep = 0;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>weatherCondition = '';</p>
+<p class="p1"><span class="Apple-converted-space">      </span>soilMoisture = '';</p>
+<p class="p1"><span class="Apple-converted-space">      </span>weatherStartTime = '';</p>
+<p class="p1"><span class="Apple-converted-space">      </span>weatherEndTime = '';</p>
+<p class="p1"><span class="Apple-converted-space">    </span>}</p>
+<p class="p1"><span class="Apple-converted-space">  </span>}</p>
+<p class="p1">}</p>
+<p class="p2"><br></p>
+<p class="p1">function sendToGoogleSheets(data) {</p>
+<p class="p1"><span class="Apple-converted-space">  </span>let url = googleSheetURL +<span class="Apple-converted-space"> </span></p>
+<p class="p1"><span class="Apple-converted-space">    </span>'?date=' + encodeURIComponent(data.date) +</p>
+<p class="p1"><span class="Apple-converted-space">    </span>'&amp;weather=' + encodeURIComponent(data.weather) +</p>
+<p class="p1"><span class="Apple-converted-space">    </span>'&amp;soil=' + encodeURIComponent(data.soil) +</p>
+<p class="p1"><span class="Apple-converted-space">    </span>'&amp;timeStart=' + encodeURIComponent(data.timeStart) +</p>
+<p class="p1"><span class="Apple-converted-space">    </span>'&amp;timeEnd=' + encodeURIComponent(data.timeEnd) +</p>
+<p class="p1"><span class="Apple-converted-space">    </span>'&amp;clicks=' + data.clicks +</p>
+<p class="p1"><span class="Apple-converted-space">    </span>'&amp;harvested=' + data.harvested;</p>
+<p class="p2"><span class="Apple-converted-space">  </span></p>
+<p class="p1"><span class="Apple-converted-space">  </span>let img = document.createElement('img');</p>
+<p class="p1"><span class="Apple-converted-space">  </span>img.src = url;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>img.style.display = 'none';</p>
+<p class="p1"><span class="Apple-converted-space">  </span>document.body.appendChild(img);</p>
+<p class="p2"><span class="Apple-converted-space">  </span></p>
+<p class="p1"><span class="Apple-converted-space">  </span>console.log('Sending data to Google Sheets...');</p>
+<p class="p1">}</p>
+<p class="p1">&lt;/script&gt;</p>
+<p class="p1">&lt;/body&gt;</p>
+<p class="p1">&lt;/html&gt;</p>
+</body>
+</html>
