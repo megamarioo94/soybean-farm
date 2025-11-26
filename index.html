@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <title>Digital Soybean Farm</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.min.js"></script>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      overflow: hidden;
+      background: #f0f0f0;
+      touch-action: none;
+    }
+    canvas {
+      display: block;
+    }
+  </style>
+</head>
+<body>
+<script>
+let soybeans = [];
+let nitrogen = 0;
+let clicksToday = 0;
+let maxClicksPerDay = 15;
+let lastResetDate = null;
+let totalHarvested = 0;
+let tempehInProgress = false;
+let tempehStartTime = null;
+let tempehReady = false;
+let tempehCount = 0;
+let showWeatherForm = false;
+let weatherLog = [];
+
+let weatherCondition = '';
+let soilMoisture = '';
+let weatherStartTime = '';
+let weatherEndTime = '';
+let formStep = 0;
+let googleSheetURL = 'https://script.google.com/a/macros/mylasalle.edu.sg/s/AKfycbzVURMhwRJ0g0_lNK30Dwm3hbDuk9O1MgQmG8djoc4Cs5ZQm9Q8a64UEzNDlxWqS0ZXMA/exec';
+
+function setup() {
+  createCanvas(windowWidth, windowHeight);
+  checkDailyReset();
+}
+
+function windowResized() {
+  resizeCanvas(windowWidth, windowHeight);
+}
+
+function draw() {
+  drawDynamicBackground();
+  
+  let soilLerp = map(constrain(nitrogen, 0, 20), 0, 20, 0, 1);
+  let soilR = lerp(140, 81, soilLerp);
+  let soilG = lerp(122, 71, soilLerp);
+  let soilB = lerp(107, 61, soilLerp);
+  fill(soilR, soilG, soilB);
+  noStroke();
+  rect(0, height * 0.7, width, height * 0.3);
+  
+  for (let i = 0; i < soybeans.length; i++) {
+    drawSoybean(soybeans[i]);
+  }
+  
+  drawBasket();
+  drawTempehStation();
+  drawStats();
+  
+  if (tempehInProgress && !tempehReady) {
+    checkTempehProgress();
+  }
+  
+  if (showWeatherForm) {
+    drawWeatherForm();
+  }
+}
+
+function drawDynamicBackground() {
+  let h = hour();
+  
+  if (h >= 6 && h < 12) {
+    let t = map(h, 6, 12, 0, 1);
+    let r = lerp(150, 125, t);
+    let g = lerp(180, 157, t);
+    let b = lerp(220, 209, t);
+    background(r, g, b);
+  } else if (h >= 12 && h < 18) {
+    background(125, 157, 209);
+  } else if (h >= 18 && h < 20) {
+    let t = map(h, 18, 20, 0, 1);
+    let r = lerp(125, 255, t);
+    let g = lerp(157, 140, t);
+    let b = lerp(209, 100, t);
+    background(r, g, b);
+  } else {
+    background(30, 40, 80);
+  }
+  
+  noStroke();
+  if (h >= 6 && h < 20) {
+    fill(255, 220, 100, 200);
+    let sunX = map(h, 6, 20, width * 0.1, width * 0.9);
+    let sunY = map(h, 6, 20, height * 0.3, height * 0.1);
+    circle(sunX, sunY, min(width, height) * 0.08);
+  } else {
+    fill(240, 240, 255, 180);
+    circle(width * 0.85, height * 0.12, min(width, height) * 0.06);
+  }
+}
+
+function drawSoybean(bean) {
+  push();
+  translate(bean.x, bean.y);
+  
+  if (bean.harvested) {
+    let fadeAmt = frameCount - bean.harvestFrame;
+    if (fadeAmt < 60) {
+      fill(255, 255, 255, 255 - fadeAmt * 4);
+      noStroke();
+      textSize(14);
+      textAlign(CENTER);
+      text('+1 N', 0, -25);
+    }
+    pop();
+    return;
+  }
+  
+  if (bean.growth === 0) {
+    fill(183, 183, 171);
+    stroke(154, 154, 143);
+    strokeWeight(1);
+    ellipse(0, 5, 8, 10);
+  }
+  
+  if (bean.growth >= 1) {
+    let stemLen = 20 + (bean.growth - 1) * 10;
+    
+    stroke(64, 96, 73);
+    strokeWeight(1.5);
+    noFill();
+    line(0, 0, 0, -stemLen);
+    
+    stroke(64, 96, 73);
+    strokeWeight(1);
+    noFill();
+    let numLeaves = min(bean.growth + 1, 5);
+    let leafSize = 6 + bean.growth;
+    
+    for (let i = 0; i < numLeaves; i++) {
+      let leafPosY = -stemLen * (i + 1) / (numLeaves + 1);
+      let leafSide = (i % 2 === 0) ? -1 : 1;
+      ellipse(leafSide * (leafSize + 2), leafPosY, leafSize * 1.8, leafSize * 1.2);
+    }
+    
+    if (bean.growth >= 5) {
+      stroke(180, 150, 80);
+      strokeWeight(1);
+      fill(220, 200, 120);
+      let numPods = bean.growth - 4;
+      for (let j = 0; j < numPods; j++) {
+        let podPosY = -stemLen * 0.5 - j * 10;
+        let podSide = (j % 2 === 0) ? 1 : -1;
+        ellipse(podSide * 6, podPosY, 6, 10);
+      }
+    }
+    
+    if (bean.growth >= 3 && bean.growth <= 4) {
+      stroke(200, 150, 200);
+      strokeWeight(1);
+      fill(255, 220, 255);
+      let flowerPosY = -stemLen * 0.7;
+      for (let k = 0; k < 4; k++) {
+        let angle = k * TWO_PI / 4;
+        let petalX = cos(angle) * 3;
+        let petalY = flowerPosY + sin(angle) * 3;
+        circle(petalX, petalY, 4);
+      }
+    }
+  }
+  
+  fill(255);
+  noStroke();
+  textSize(11);
+  textAlign(CENTER);
+  text(bean.growth, 0, 20);
+  
+  pop();
+}
+
+function drawBasket() {
+  let bx = width - min(width * 0.15, 120);
+  let by = height - min(height * 0.2, 120);
+  let scale = min(width, height) / 800;
+  
+  stroke(139, 90, 43);
+  strokeWeight(2);
+  fill(160, 120, 80);
+  beginShape();
+  vertex(bx - 40 * scale, by);
+  vertex(bx - 35 * scale, by - 40 * scale);
+  vertex(bx + 35 * scale, by - 40 * scale);
+  vertex(bx + 40 * scale, by);
+  endShape(CLOSE);
+  
+  stroke(120, 80, 50);
+  strokeWeight(1);
+  for (let i = 0; i < 4; i++) {
+    let y = by - 10 * scale - i * 8 * scale;
+    line(bx - 35 * scale + i * 2 * scale, y, bx + 35 * scale - i * 2 * scale, y);
+  }
+  for (let j = 0; j < 8; j++) {
+    let x = bx - 30 * scale + j * 10 * scale;
+    line(x, by - 5 * scale, x, by - 35 * scale);
+  }
+  
+  let harvestedCount = 0;
+  for (let m = 0; m < soybeans.length; m++) {
+    if (soybeans[m].harvested) {
+      harvestedCount++;
+    }
+  }
+  
+  fill(220, 200, 120);
+  stroke(180, 150, 80);
+  strokeWeight(1);
+  
+  let beansToShow = min(harvestedCount, 20);
+  for (let n = 0; n < beansToShow; n++) {
+    let beanX = bx - 25 * scale + (n % 6) * 10 * scale + random(-2, 2);
+    let beanY = by - 10 * scale - floor(n / 6) * 8 * scale;
+    ellipse(beanX, beanY, 8 * scale, 6 * scale);
+  }
+  
+  fill(255);
+  stroke(0);
+  strokeWeight(3);
+  textAlign(CENTER);
+  textSize(14 * scale);
+  text('Harvest: ' + harvestedCount, bx, by + 25 * scale);
+}
+
+function drawTempehStation() {
+  let tx = width - min(width * 0.15, 120);
+  let ty = height - min(height * 0.2, 120);
+  let scale = min(width, height) / 800;
+  
+  stroke(101, 67, 33);
+  strokeWeight(2);
+  fill(139, 90, 43);
+  rect(tx + 60 * scale, ty - 50 * scale, 100 * scale, 8 * scale);
+  rect(tx + 65 * scale, ty - 42 * scale, 5 * scale, 30 * scale);
+  rect(tx + 150 * scale, ty - 42 * scale, 5 * scale, 30 * scale);
+  
+  fill(255);
+  stroke(0);
+  strokeWeight(2);
+  textAlign(CENTER);
+  textSize(12 * scale);
+  text('Tempeh Station', tx + 110 * scale, ty - 60 * scale);
+  
+  noStroke();
+  textSize(10 * scale);
+  
+  if (tempehReady) {
+    fill(0, 255, 0);
+    text('Tempeh Ready!', tx + 110 * scale, ty - 10 * scale);
+    text('Count: ' + tempehCount, tx + 110 * scale, ty + 5 * scale);
+  } else if (tempehInProgress) {
+    let elapsed = millis() - tempehStartTime;
+    let remaining = 7200000 - elapsed;
+    let minutesLeft = floor(remaining / 60000);
+    fill(255, 200, 0);
+    text('Fermenting...', tx + 110 * scale, ty - 10 * scale);
+    text(minutesLeft + ' min left', tx + 110 * scale, ty + 5 * scale);
+  } else {
+    fill(150);
+    text('Need 30 beans', tx + 110 * scale, ty - 10 * scale);
+    text('to make tempeh', tx + 110 * scale, ty + 5 * scale);
+  }
+}
+
+function drawStats() {
+  let scale = min(width, height) / 800;
+  
+  textAlign(CENTER);
+  fill(255);
+  stroke(0);
+  strokeWeight(4);
+  textSize(22 * scale);
+  text('Digital Soybean Farm', width / 2, 35 * scale);
+  
+  strokeWeight(3);
+  textSize(16 * scale);
+  text('Click to plant & grow!', width / 2, 60 * scale);
+  
+  fill(255, 255, 255, 200);
+  stroke(0);
+  strokeWeight(2);
+  rect(20 * scale, 85 * scale, 200 * scale, 110 * scale, 10 * scale);
+  
+  let activeCount = 0;
+  let harvestedCount = 0;
+  for (let i = 0; i < soybeans.length; i++) {
+    if (soybeans[i].harvested) {
+      harvestedCount++;
+    } else {
+      activeCount++;
+    }
+  }
+  
+  fill(0);
+  noStroke();
+  textAlign(LEFT);
+  textSize(16 * scale);
+  text('Active Plants: ' + activeCount, 35 * scale, 110 * scale);
+  text('Harvested: ' + harvestedCount, 35 * scale, 130 * scale);
+  text('Nitrogen (N): ' + nitrogen, 35 * scale, 150 * scale);
+  text('Clicks Today: ' + clicksToday + '/' + maxClicksPerDay, 35 * scale, 170 * scale);
+  text('Total Harvest: ' + totalHarvested, 35 * scale, 190 * scale);
+}
+
+function drawWeatherForm() {
+  fill(0, 0, 0, 150);
+  noStroke();
+  rect(0, 0, width, height);
+  
+  let scale = min(width, height) / 800;
+  let boxW = 400 * scale;
+  let boxH = 300 * scale;
+  
+  fill(255);
+  stroke(0);
+  strokeWeight(3);
+  rect(width/2 - boxW/2, height/2 - boxH/2, boxW, boxH, 10);
+  
+  fill(0);
+  noStroke();
+  textAlign(CENTER);
+  textSize(20 * scale);
+  text('Daily Limit Reached!', width/2, height/2 - boxH/2 + 40 * scale);
+  
+  textSize(16 * scale);
+  text('Please log today\'s conditions:', width/2, height/2 - boxH/2 + 70 * scale);
+  
+  textSize(14 * scale);
+  textAlign(CENTER);
+  
+  if (formStep === 0) {
+    text('Select Weather Condition:', width/2, height/2 - 30 * scale);
+    drawButton('Sunny', width/2 - 150 * scale, height/2, 60 * scale, 30 * scale, scale);
+    drawButton('Rainy', width/2 - 70 * scale, height/2, 60 * scale, 30 * scale, scale);
+    drawButton('Cloudy', width/2 + 10 * scale, height/2, 60 * scale, 30 * scale, scale);
+    drawButton('Windy', width/2 + 90 * scale, height/2, 60 * scale, 30 * scale, scale);
+  }
+  
+  if (formStep === 1) {
+    text('Weather: ' + weatherCondition, width/2, height/2 - 50 * scale);
+    text('Select Soil Moisture:', width/2, height/2 - 10 * scale);
+    drawButton('Dry', width/2 - 90 * scale, height/2 + 20 * scale, 80 * scale, 30 * scale, scale);
+    drawButton('Perfect', width/2, height/2 + 20 * scale, 80 * scale, 30 * scale, scale);
+    drawButton('Too Moist', width/2 + 90 * scale, height/2 + 20 * scale, 80 * scale, 30 * scale, scale);
+  }
+  
+  if (formStep === 2) {
+    text('Weather: ' + weatherCondition, width/2, height/2 - 60 * scale);
+    text('Soil: ' + soilMoisture, width/2, height/2 - 40 * scale);
+    text('Enter Time Range:', width/2, height/2 - 10 * scale);
+    text('Start Time (e.g., 08:00):', width/2 - 80 * scale, height/2 + 20 * scale);
+    text('End Time (e.g., 17:00):', width/2 - 80 * scale, height/2 + 60 * scale);
+    
+    fill(240);
+    stroke(0);
+    strokeWeight(2);
+    rect(width/2 + 20 * scale, height/2 + 5 * scale, 100 * scale, 25 * scale);
+    rect(width/2 + 20 * scale, height/2 + 45 * scale, 100 * scale, 25 * scale);
+    
+    fill(0);
+    noStroke();
+    textAlign(LEFT);
+    text(weatherStartTime + '_', width/2 + 25 * scale, height/2 + 22 * scale);
+    text(weatherEndTime + '_', width/2 + 25 * scale, height/2 + 62 * scale);
+    
+    textAlign(CENTER);
+    textSize(12 * scale);
+    text('Press ENTER when done', width/2, height/2 + 100 * scale);
+  }
+}
+
+function drawButton(label, x, y, w, h, scale) {
+  push();
+  fill(100, 200, 100);
+  stroke(0);
+  strokeWeight(2);
+  rect(x - w/2, y - h/2, w, h, 5);
+  
+  fill(255);
+  noStroke();
+  textAlign(CENTER, CENTER);
+  textSize(12 * scale);
+  text(label, x, y);
+  pop();
+}
+
+function checkDailyReset() {
+  let today = day() + '/' + month() + '/' + year();
+  
+  if (lastResetDate !== today) {
+    clicksToday = 0;
+    lastResetDate = today;
+    showWeatherForm = false;
+  }
+}
+
+function checkTempehProgress() {
+  let elapsed = millis() - tempehStartTime;
+  if (elapsed >= 7200000) {
+    tempehReady = true;
+    tempehInProgress = false;
+    tempehCount++;
+  }
+}
+
+function mousePressed() {
+  checkDailyReset();
+  
+  if (showWeatherForm) {
+    handleFormClick();
+    return;
+  }
+  
+  if (clicksToday >= maxClicksPerDay) {
+    showWeatherForm = true;
+    formStep = 0;
+    return;
+  }
+  
+  if (mouseY > height * 0.7 - 50 && mouseY < height) {
+    soybeans.push({
+      x: mouseX,
+      y: height * 0.7 + 20,
+      growth: 0,
+      harvested: false,
+      harvestFrame: 0
+    });
+  }
+  
+  for (let i = 0; i < soybeans.length; i++) {
+    if (!soybeans[i].harvested && soybeans[i].growth < 7) {
+      soybeans[i].growth++;
+      if (soybeans[i].growth === 7) {
+        soybeans[i].harvested = true;
+        soybeans[i].harvestFrame = frameCount;
+        nitrogen++;
+        totalHarvested++;
+        
+        if (totalHarvested >= 30 && !tempehInProgress && !tempehReady) {
+          tempehInProgress = true;
+          tempehStartTime = millis();
+          totalHarvested = 0;
+        }
+      }
+    }
+  }
+  
+  clicksToday++;
+  
+  if (clicksToday >= maxClicksPerDay) {
+    showWeatherForm = true;
+    formStep = 0;
+  }
+}
+
+function handleFormClick() {
+  let mx = mouseX;
+  let my = mouseY;
+  let scale = min(width, height) / 800;
+  
+  if (formStep === 0) {
+    if (my > height/2 - 15 * scale && my < height/2 + 15 * scale) {
+      if (mx > width/2 - 180 * scale && mx < width/2 - 120 * scale) {
+        weatherCondition = 'Sunny';
+        formStep = 1;
+      } else if (mx > width/2 - 100 * scale && mx < width/2 - 40 * scale) {
+        weatherCondition = 'Rainy';
+        formStep = 1;
+      } else if (mx > width/2 - 20 * scale && mx < width/2 + 40 * scale) {
+        weatherCondition = 'Cloudy';
+        formStep = 1;
+      } else if (mx > width/2 + 60 * scale && mx < width/2 + 120 * scale) {
+        weatherCondition = 'Windy';
+        formStep = 1;
+      }
+    }
+  }
+  
+  if (formStep === 1) {
+    if (my > height/2 + 5 * scale && my < height/2 + 35 * scale) {
+      if (mx > width/2 - 130 * scale && mx < width/2 - 50 * scale) {
+        soilMoisture = 'Dry';
+        formStep = 2;
+      } else if (mx > width/2 - 40 * scale && mx < width/2 + 40 * scale) {
+        soilMoisture = 'Perfect';
+        formStep = 2;
+      } else if (mx > width/2 + 50 * scale && mx < width/2 + 130 * scale) {
+        soilMoisture = 'Too Moist';
+        formStep = 2;
+      }
+    }
+  }
+}
+
+function keyPressed() {
+  if (showWeatherForm && formStep === 2) {
+    if (weatherStartTime.length < 5) {
+      if (key >= '0' && key <= '9') {
+        weatherStartTime += key;
+      }
+      if (key === ':' && weatherStartTime.length === 2) {
+        weatherStartTime += ':';
+      }
+    } else if (weatherEndTime.length < 5) {
+      if (key >= '0' && key <= '9') {
+        weatherEndTime += key;
+      }
+      if (key === ':' && weatherEndTime.length === 2) {
+        weatherEndTime += ':';
+      }
+    }
+    
+    if (keyCode === BACKSPACE) {
+      if (weatherEndTime.length > 0) {
+        weatherEndTime = weatherEndTime.slice(0, -1);
+      } else if (weatherStartTime.length > 0) {
+        weatherStartTime = weatherStartTime.slice(0, -1);
+      }
+    }
+    
+    if (keyCode === ENTER && weatherStartTime.length === 5 && weatherEndTime.length === 5) {
+      let logEntry = {
+        date: day() + '/' + month() + '/' + year(),
+        weather: weatherCondition,
+        soil: soilMoisture,
+        timeStart: weatherStartTime,
+        timeEnd: weatherEndTime,
+        clicks: clicksToday,
+        harvested: nitrogen
+      };
+      weatherLog.push(logEntry);
+      
+      sendToGoogleSheets(logEntry);
+      
+      console.log('Weather Log Saved:', logEntry);
+      console.log('All Logs:', weatherLog);
+      
+      showWeatherForm = false;
+      formStep = 0;
+      weatherCondition = '';
+      soilMoisture = '';
+      weatherStartTime = '';
+      weatherEndTime = '';
+    }
+  }
+}
+
+function sendToGoogleSheets(data) {
+  let url = googleSheetURL + 
+    '?date=' + encodeURIComponent(data.date) +
+    '&weather=' + encodeURIComponent(data.weather) +
+    '&soil=' + encodeURIComponent(data.soil) +
+    '&timeStart=' + encodeURIComponent(data.timeStart) +
+    '&timeEnd=' + encodeURIComponent(data.timeEnd) +
+    '&clicks=' + data.clicks +
+    '&harvested=' + data.harvested;
+  
+  let img = document.createElement('img');
+  img.src = url;
+  img.style.display = 'none';
+  document.body.appendChild(img);
+  
+  console.log('Sending data to Google Sheets...');
+}
+</script>
+</body>
+</html>
