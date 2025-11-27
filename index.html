@@ -197,7 +197,7 @@ function drawSoybean(bean) {
 function drawBasket() {
   let scale = min(width, height) / 800;
   let bx = width - 120 * scale;
-  let by = height - 120 * scale;
+  let by = height - 170 * scale;  // Moved down 40 pixels (was 210)
   
   stroke(139, 90, 43);
   strokeWeight(2);
@@ -248,7 +248,7 @@ function drawBasket() {
 function drawTempehStation() {
   let scale = min(width, height) / 800;
   let tx = width - 120 * scale;
-  let ty = height - 50 * scale;
+  let ty = height - 100 * scale;  // Moved down 40 pixels (was 140)
   
   stroke(101, 67, 33);
   strokeWeight(2);
@@ -278,7 +278,7 @@ function drawTempehStation() {
     text('Fermenting...', tx, ty + 50 * scale);
     text(minutesLeft + ' min left', tx, ty + 65 * scale);
   } else {
-    fill(150);
+    fill(255);
     text('Need 30 beans', tx, ty + 50 * scale);
     text('to make tempeh', tx, ty + 65 * scale);
   }
