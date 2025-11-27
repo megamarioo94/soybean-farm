@@ -298,9 +298,8 @@ function drawStats() {
   text('Click to plant & grow!', width / 2, 60 * scale);
   
   fill(255, 255, 255, 200);
-  stroke(0);
-  strokeWeight(2);
-  rect(20 * scale, 85 * scale, 200 * scale, 110 * scale, 10 * scale);
+  noStroke();
+  rect(20 * scale, 85 * scale, 200 * scale, 120 * scale, 10 * scale);
   
   let activeCount = 0;
   let harvestedCount = 0;
@@ -315,7 +314,7 @@ function drawStats() {
   fill(0);
   noStroke();
   textAlign(LEFT);
-  textSize(16 * scale);
+  textSize(12 * scale);
   text('Active Plants: ' + activeCount, 35 * scale, 110 * scale);
   text('Harvested: ' + harvestedCount, 35 * scale, 130 * scale);
   text('Nitrogen (N): ' + nitrogen, 35 * scale, 150 * scale);
@@ -335,7 +334,6 @@ function drawWeatherForm() {
   fill(255);
   stroke(0);
   strokeWeight(3);
-  noStroke();
   rect(width/2 - boxW/2, height/2 - boxH/2, boxW, boxH, 10);
   
   fill(0);
@@ -376,7 +374,7 @@ function drawWeatherForm() {
     text('Soil: ' + soilMoisture, width/2, height/2 - 125 * scale);
     
     noStroke();
-    textSize(12 * scale);
+    textSize(14 * scale);
     textAlign(LEFT);
     text('Start Time:', width/2 - 140 * scale, height/2 - 80 * scale);
     noStroke();
