@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes, minimum-scale=0.5, maximum-scale=3.0">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="mobile-web-app-capable" content="yes">
   <title>Digital Soybean Farm</title>
@@ -16,7 +16,7 @@
     body {
       overflow: hidden;
       background: #f0f0f0;
-      touch-action: none;
+      touch-action: pan-x pan-y pinch-zoom;
     }
     canvas {
       display: block;
@@ -292,7 +292,7 @@ function drawStats() {
   fill(255);
   noStroke();
   textSize(22 * scale);
-  text('Digital Soybean Farm', width / 2, 35 * scale);
+  text('Digital Soybean Farm', width / 2, 50 * scale);
   
   noStroke();
   textSize(16 * scale);
@@ -301,7 +301,7 @@ function drawStats() {
   fill(255, 255, 255, 200);
   stroke(0);
   strokeWeight(2);
-  rect(20 * scale, 85 * scale, 200 * scale, 110 * scale, 10 * scale);
+  rect(20 * scale, 85 * scale, 200 * scale, 120 * scale, 10 * scale);
   
   let activeCount = 0;
   let harvestedCount = 0;
@@ -336,7 +336,7 @@ function drawWeatherForm() {
   fill(255);
   stroke(0);
   strokeWeight(3);
-  rect(width/2 - boxW/2, height/2 - boxH/2, boxW, boxH, 10);
+  rect(width/2 - boxW/2, height/2 - boxH/2, boxW, boxH, 7);
   
   fill(0);
   noStroke();
