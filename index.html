@@ -47,6 +47,7 @@ let googleSheetURL = 'https://script.google.com/a/macros/mylasalle.edu.sg/s/AKfy
 
 function setup() {
   createCanvas(windowWidth, windowHeight);
+  textFont('Courier');
   checkDailyReset();
 }
 
@@ -195,9 +196,9 @@ function drawSoybean(bean) {
 }
 
 function drawBasket() {
-  let bx = width - min(width * 0.15, 120);
-  let by = height - min(height * 0.2, 120);
   let scale = min(width, height) / 800;
+  let bx = width - 120 * scale;
+  let by = height - 120 * scale;
   
   stroke(139, 90, 43);
   strokeWeight(2);
@@ -239,50 +240,48 @@ function drawBasket() {
   }
   
   fill(255);
-  stroke(0);
-  strokeWeight(3);
+  noStroke();
   textAlign(CENTER);
   textSize(14 * scale);
   text('Harvest: ' + harvestedCount, bx, by + 25 * scale);
 }
 
 function drawTempehStation() {
-  let tx = width - min(width * 0.15, 120);
-  let ty = height - min(height * 0.2, 120);
   let scale = min(width, height) / 800;
+  let tx = width - 120 * scale;
+  let ty = height - 50 * scale;
   
   stroke(101, 67, 33);
   strokeWeight(2);
   fill(139, 90, 43);
-  rect(tx + 60 * scale, ty - 50 * scale, 100 * scale, 8 * scale);
-  rect(tx + 65 * scale, ty - 42 * scale, 5 * scale, 30 * scale);
-  rect(tx + 150 * scale, ty - 42 * scale, 5 * scale, 30 * scale);
+  rect(tx - 50 * scale, ty, 100 * scale, 8 * scale);
+  rect(tx - 45 * scale, ty + 8 * scale, 5 * scale, 30 * scale);
+  rect(tx + 40 * scale, ty + 8 * scale, 5 * scale, 30 * scale);
   
   fill(255);
-  stroke(0);
-  strokeWeight(2);
+  noStroke();
   textAlign(CENTER);
   textSize(12 * scale);
-  text('Tempeh Station', tx + 110 * scale, ty - 60 * scale);
+  text('Tempeh Station', tx, ty - 10 * scale);
   
   noStroke();
   textSize(10 * scale);
   
   if (tempehReady) {
     fill(0, 255, 0);
-    text('Tempeh Ready!', tx + 110 * scale, ty - 10 * scale);
-    text('Count: ' + tempehCount, tx + 110 * scale, ty + 5 * scale);
+    text('Tempeh Ready!', tx, ty + 50 * scale);
+    text('Count: ' + tempehCount, tx, ty + 65 * scale);
   } else if (tempehInProgress) {
     let elapsed = millis() - tempehStartTime;
     let remaining = 7200000 - elapsed;
     let minutesLeft = floor(remaining / 60000);
     fill(255, 200, 0);
-    text('Fermenting...', tx + 110 * scale, ty - 10 * scale);
-    text(minutesLeft + ' min left', tx + 110 * scale, ty + 5 * scale);
+    text('Fermenting...', tx, ty + 50 * scale);
+    text(minutesLeft + ' min left', tx, ty + 65 * scale);
   } else {
     fill(150);
-    text('Need 30 beans', tx + 110 * scale, ty - 10 * scale);
-    text('to make tempeh', tx + 110 * scale, ty + 5 * scale);
+    text('Need 30 beans', tx, ty + 50 * scale);
+    text('to make tempeh', tx, ty + 65 * scale);
   }
 }
 
@@ -291,12 +290,11 @@ function drawStats() {
   
   textAlign(CENTER);
   fill(255);
-  stroke(0);
-  strokeWeight(4);
+  noStroke();
   textSize(22 * scale);
   text('Digital Soybean Farm', width / 2, 35 * scale);
   
-  strokeWeight(3);
+  noStroke();
   textSize(16 * scale);
   text('Click to plant & grow!', width / 2, 60 * scale);
   
@@ -333,7 +331,7 @@ function drawWeatherForm() {
   
   let scale = min(width, height) / 800;
   let boxW = 400 * scale;
-  let boxH = 300 * scale;
+  let boxH = 400 * scale;
   
   fill(255);
   stroke(0);
@@ -346,65 +344,100 @@ function drawWeatherForm() {
   textSize(20 * scale);
   text('Daily Limit Reached!', width/2, height/2 - boxH/2 + 40 * scale);
   
+  noStroke();
   textSize(16 * scale);
-  text('Please log today\'s conditions:', width/2, height/2 - boxH/2 + 70 * scale);
+  text('Please log conditions:', width/2, height/2 - boxH/2 + 70 * scale);
   
+  noStroke();
   textSize(14 * scale);
-  textAlign(CENTER);
   
   if (formStep === 0) {
-    text('Select Weather Condition:', width/2, height/2 - 30 * scale);
-    drawButton('Sunny', width/2 - 150 * scale, height/2, 60 * scale, 30 * scale, scale);
-    drawButton('Rainy', width/2 - 70 * scale, height/2, 60 * scale, 30 * scale, scale);
-    drawButton('Cloudy', width/2 + 10 * scale, height/2, 60 * scale, 30 * scale, scale);
-    drawButton('Windy', width/2 + 90 * scale, height/2, 60 * scale, 30 * scale, scale);
+    text('Select Weather:', width/2, height/2 - 80 * scale);
+    drawButton('Sunny', width/2 - 150 * scale, height/2 - 40 * scale, 120 * scale, 50 * scale, scale);
+    drawButton('Rainy', width/2 - 10 * scale, height/2 - 40 * scale, 120 * scale, 50 * scale, scale);
+    drawButton('Cloudy', width/2 - 150 * scale, height/2 + 30 * scale, 120 * scale, 50 * scale, scale);
+    drawButton('Windy', width/2 - 10 * scale, height/2 + 30 * scale, 120 * scale, 50 * scale, scale);
   }
   
   if (formStep === 1) {
-    text('Weather: ' + weatherCondition, width/2, height/2 - 50 * scale);
-    text('Select Soil Moisture:', width/2, height/2 - 10 * scale);
-    drawButton('Dry', width/2 - 90 * scale, height/2 + 20 * scale, 80 * scale, 30 * scale, scale);
-    drawButton('Perfect', width/2, height/2 + 20 * scale, 80 * scale, 30 * scale, scale);
-    drawButton('Too Moist', width/2 + 90 * scale, height/2 + 20 * scale, 80 * scale, 30 * scale, scale);
+    noStroke();
+    text('Weather: ' + weatherCondition, width/2, height/2 - 90 * scale);
+    noStroke();
+    text('Select Soil Moisture:', width/2, height/2 - 50 * scale);
+    drawButton('Dry', width/2 - 150 * scale, height/2, 120 * scale, 50 * scale, scale);
+    drawButton('Perfect', width/2 - 10 * scale, height/2, 120 * scale, 50 * scale, scale);
+    drawButton('Too Moist', width/2 - 10 * scale, height/2 + 70 * scale, 120 * scale, 50 * scale, scale);
   }
   
   if (formStep === 2) {
-    text('Weather: ' + weatherCondition, width/2, height/2 - 60 * scale);
-    text('Soil: ' + soilMoisture, width/2, height/2 - 40 * scale);
-    text('Enter Time Range:', width/2, height/2 - 10 * scale);
-    text('Start Time (e.g., 08:00):', width/2 - 80 * scale, height/2 + 20 * scale);
-    text('End Time (e.g., 17:00):', width/2 - 80 * scale, height/2 + 60 * scale);
-    
-    fill(240);
-    stroke(0);
-    strokeWeight(2);
-    rect(width/2 + 20 * scale, height/2 + 5 * scale, 100 * scale, 25 * scale);
-    rect(width/2 + 20 * scale, height/2 + 45 * scale, 100 * scale, 25 * scale);
-    
-    fill(0);
     noStroke();
-    textAlign(LEFT);
-    text(weatherStartTime + '_', width/2 + 25 * scale, height/2 + 22 * scale);
-    text(weatherEndTime + '_', width/2 + 25 * scale, height/2 + 62 * scale);
+    text('Weather: ' + weatherCondition, width/2, height/2 - 150 * scale);
+    noStroke();
+    text('Soil: ' + soilMoisture, width/2, height/2 - 125 * scale);
     
-    textAlign(CENTER);
-    textSize(12 * scale);
-    text('Press ENTER when done', width/2, height/2 + 100 * scale);
+    noStroke();
+    textSize(14 * scale);
+    textAlign(LEFT);
+    text('Start Time:', width/2 - 140 * scale, height/2 - 80 * scale);
+    noStroke();
+    text('End Time:', width/2 - 140 * scale, height/2);
+    
+    drawTimePicker(width/2 - 60 * scale, height/2 - 95 * scale, weatherStartTime, scale);
+    drawTimePicker(width/2 - 60 * scale, height/2 - 15 * scale, weatherEndTime, scale);
+    
+    fill(100, 200, 100);
+    stroke(0);
+    strokeWeight(3);
+    rect(width/2 - 80 * scale, height/2 + 100 * scale, 160 * scale, 50 * scale, 10);
+    
+    fill(255);
+    noStroke();
+    textAlign(CENTER, CENTER);
+    textSize(18 * scale);
+    text('DONE', width/2, height/2 + 125 * scale);
   }
+}
+
+function drawTimePicker(x, y, timeStr, scale) {
+  let hourVal = timeStr.split(':')[0] || '00';
+  let minVal = timeStr.split(':')[1] || '00';
+  
+  fill(240);
+  stroke(0);
+  strokeWeight(2);
+  rect(x, y, 60 * scale, 40 * scale, 5);
+  rect(x + 80 * scale, y, 60 * scale, 40 * scale, 5);
+  
+  fill(0);
+  noStroke();
+  textAlign(CENTER, CENTER);
+  textSize(20 * scale);
+  text(hourVal, x + 30 * scale, y + 20 * scale);
+  text(':', x + 65 * scale, y + 20 * scale);
+  text(minVal, x + 110 * scale, y + 20 * scale);
+  
+  fill(100, 200, 100);
+  stroke(0);
+  strokeWeight(2);
+  
+  triangle(x + 15 * scale, y - 8 * scale, x + 45 * scale, y - 8 * scale, x + 30 * scale, y - 18 * scale);
+  triangle(x + 15 * scale, y + 48 * scale, x + 45 * scale, y + 48 * scale, x + 30 * scale, y + 58 * scale);
+  triangle(x + 95 * scale, y - 8 * scale, x + 125 * scale, y - 8 * scale, x + 110 * scale, y - 18 * scale);
+  triangle(x + 95 * scale, y + 48 * scale, x + 125 * scale, y + 48 * scale, x + 110 * scale, y + 58 * scale);
 }
 
 function drawButton(label, x, y, w, h, scale) {
   push();
   fill(100, 200, 100);
   stroke(0);
-  strokeWeight(2);
-  rect(x - w/2, y - h/2, w, h, 5);
+  strokeWeight(3);
+  rect(x, y, w, h, 10);
   
   fill(255);
   noStroke();
   textAlign(CENTER, CENTER);
-  textSize(12 * scale);
-  text(label, x, y);
+  textSize(14 * scale);
+  text(label, x + w/2, y + h/2);
   pop();
 }
 
@@ -483,90 +516,128 @@ function handleFormClick() {
   let scale = min(width, height) / 800;
   
   if (formStep === 0) {
-    if (my > height/2 - 15 * scale && my < height/2 + 15 * scale) {
-      if (mx > width/2 - 180 * scale && mx < width/2 - 120 * scale) {
-        weatherCondition = 'Sunny';
-        formStep = 1;
-      } else if (mx > width/2 - 100 * scale && mx < width/2 - 40 * scale) {
-        weatherCondition = 'Rainy';
-        formStep = 1;
-      } else if (mx > width/2 - 20 * scale && mx < width/2 + 40 * scale) {
-        weatherCondition = 'Cloudy';
-        formStep = 1;
-      } else if (mx > width/2 + 60 * scale && mx < width/2 + 120 * scale) {
-        weatherCondition = 'Windy';
-        formStep = 1;
-      }
+    if (mx > width/2 - 210 * scale && mx < width/2 - 90 * scale && my > height/2 - 65 * scale && my < height/2 - 15 * scale) {
+      weatherCondition = 'Sunny';
+      formStep = 1;
+    } else if (mx > width/2 - 70 * scale && mx < width/2 + 50 * scale && my > height/2 - 65 * scale && my < height/2 - 15 * scale) {
+      weatherCondition = 'Rainy';
+      formStep = 1;
+    } else if (mx > width/2 - 210 * scale && mx < width/2 - 90 * scale && my > height/2 + 5 * scale && my < height/2 + 55 * scale) {
+      weatherCondition = 'Cloudy';
+      formStep = 1;
+    } else if (mx > width/2 - 70 * scale && mx < width/2 + 50 * scale && my > height/2 + 5 * scale && my < height/2 + 55 * scale) {
+      weatherCondition = 'Windy';
+      formStep = 1;
     }
   }
   
   if (formStep === 1) {
-    if (my > height/2 + 5 * scale && my < height/2 + 35 * scale) {
-      if (mx > width/2 - 130 * scale && mx < width/2 - 50 * scale) {
-        soilMoisture = 'Dry';
-        formStep = 2;
-      } else if (mx > width/2 - 40 * scale && mx < width/2 + 40 * scale) {
-        soilMoisture = 'Perfect';
-        formStep = 2;
-      } else if (mx > width/2 + 50 * scale && mx < width/2 + 130 * scale) {
-        soilMoisture = 'Too Moist';
-        formStep = 2;
-      }
+    if (mx > width/2 - 210 * scale && mx < width/2 - 90 * scale && my > height/2 - 25 * scale && my < height/2 + 25 * scale) {
+      soilMoisture = 'Dry';
+      formStep = 2;
+      initializeTimes();
+    } else if (mx > width/2 - 70 * scale && mx < width/2 + 50 * scale && my > height/2 - 25 * scale && my < height/2 + 25 * scale) {
+      soilMoisture = 'Perfect';
+      formStep = 2;
+      initializeTimes();
+    } else if (mx > width/2 - 70 * scale && mx < width/2 + 50 * scale && my > height/2 + 45 * scale && my < height/2 + 95 * scale) {
+      soilMoisture = 'Too Moist';
+      formStep = 2;
+      initializeTimes();
     }
+  }
+  
+  if (formStep === 2) {
+    handleTimeClick(mx, my, scale);
   }
 }
 
-function keyPressed() {
-  if (showWeatherForm && formStep === 2) {
-    if (weatherStartTime.length < 5) {
-      if (key >= '0' && key <= '9') {
-        weatherStartTime += key;
-      }
-      if (key === ':' && weatherStartTime.length === 2) {
-        weatherStartTime += ':';
-      }
-    } else if (weatherEndTime.length < 5) {
-      if (key >= '0' && key <= '9') {
-        weatherEndTime += key;
-      }
-      if (key === ':' && weatherEndTime.length === 2) {
-        weatherEndTime += ':';
-      }
-    }
-    
-    if (keyCode === BACKSPACE) {
-      if (weatherEndTime.length > 0) {
-        weatherEndTime = weatherEndTime.slice(0, -1);
-      } else if (weatherStartTime.length > 0) {
-        weatherStartTime = weatherStartTime.slice(0, -1);
-      }
-    }
-    
-    if (keyCode === ENTER && weatherStartTime.length === 5 && weatherEndTime.length === 5) {
-      let logEntry = {
-        date: day() + '/' + month() + '/' + year(),
-        weather: weatherCondition,
-        soil: soilMoisture,
-        timeStart: weatherStartTime,
-        timeEnd: weatherEndTime,
-        clicks: clicksToday,
-        harvested: nitrogen
-      };
-      weatherLog.push(logEntry);
-      
-      sendToGoogleSheets(logEntry);
-      
-      console.log('Weather Log Saved:', logEntry);
-      console.log('All Logs:', weatherLog);
-      
-      showWeatherForm = false;
-      formStep = 0;
-      weatherCondition = '';
-      soilMoisture = '';
-      weatherStartTime = '';
-      weatherEndTime = '';
-    }
+function initializeTimes() {
+  let h = hour();
+  let m = minute();
+  m = round(m / 15) * 15;
+  if (m === 60) {
+    m = 0;
+    h = (h + 1) % 24;
   }
+  weatherStartTime = nf(h, 2) + ':' + nf(m, 2);
+  
+  let endH = (h + 1) % 24;
+  weatherEndTime = nf(endH, 2) + ':' + nf(m, 2);
+}
+
+function handleTimeClick(mx, my, scale) {
+  let startH = parseInt(weatherStartTime.split(':')[0]);
+  let startM = parseInt(weatherStartTime.split(':')[1]);
+  let endH = parseInt(weatherEndTime.split(':')[0]);
+  let endM = parseInt(weatherEndTime.split(':')[1]);
+  
+  let startX = width/2 - 60 * scale;
+  let startY = height/2 - 95 * scale;
+  let endX = width/2 - 60 * scale;
+  let endY = height/2 - 15 * scale;
+  
+  if (mx > startX + 15 * scale && mx < startX + 45 * scale && my > startY - 18 * scale && my < startY - 8 * scale) {
+    startH = (startH + 1) % 24;
+    weatherStartTime = nf(startH, 2) + ':' + nf(startM, 2);
+  }
+  if (mx > startX + 15 * scale && mx < startX + 45 * scale && my > startY + 48 * scale && my < startY + 58 * scale) {
+    startH = (startH - 1 + 24) % 24;
+    weatherStartTime = nf(startH, 2) + ':' + nf(startM, 2);
+  }
+  if (mx > startX + 95 * scale && mx < startX + 125 * scale && my > startY - 18 * scale && my < startY - 8 * scale) {
+    startM = (startM + 15) % 60;
+    weatherStartTime = nf(startH, 2) + ':' + nf(startM, 2);
+  }
+  if (mx > startX + 95 * scale && mx < startX + 125 * scale && my > startY + 48 * scale && my < startY + 58 * scale) {
+    startM = (startM - 15 + 60) % 60;
+    weatherStartTime = nf(startH, 2) + ':' + nf(startM, 2);
+  }
+  
+  if (mx > endX + 15 * scale && mx < endX + 45 * scale && my > endY - 18 * scale && my < endY - 8 * scale) {
+    endH = (endH + 1) % 24;
+    weatherEndTime = nf(endH, 2) + ':' + nf(endM, 2);
+  }
+  if (mx > endX + 15 * scale && mx < endX + 45 * scale && my > endY + 48 * scale && my < endY + 58 * scale) {
+    endH = (endH - 1 + 24) % 24;
+    weatherEndTime = nf(endH, 2) + ':' + nf(endM, 2);
+  }
+  if (mx > endX + 95 * scale && mx < endX + 125 * scale && my > endY - 18 * scale && my < endY - 8 * scale) {
+    endM = (endM + 15) % 60;
+    weatherEndTime = nf(endH, 2) + ':' + nf(endM, 2);
+  }
+  if (mx > endX + 95 * scale && mx < endX + 125 * scale && my > endY + 48 * scale && my < endY + 58 * scale) {
+    endM = (endM - 15 + 60) % 60;
+    weatherEndTime = nf(endH, 2) + ':' + nf(endM, 2);
+  }
+  
+  if (mx > width/2 - 80 * scale && mx < width/2 + 80 * scale && my > height/2 + 100 * scale && my < height/2 + 150 * scale) {
+    submitWeatherLog();
+  }
+}
+
+function submitWeatherLog() {
+  let logEntry = {
+    date: day() + '/' + month() + '/' + year(),
+    weather: weatherCondition,
+    soil: soilMoisture,
+    timeStart: weatherStartTime,
+    timeEnd: weatherEndTime,
+    clicks: clicksToday,
+    harvested: nitrogen
+  };
+  weatherLog.push(logEntry);
+  
+  sendToGoogleSheets(logEntry);
+  
+  console.log('Weather Log Saved:', logEntry);
+  
+  showWeatherForm = false;
+  formStep = 0;
+  weatherCondition = '';
+  soilMoisture = '';
+  weatherStartTime = '';
+  weatherEndTime = '';
 }
 
 function sendToGoogleSheets(data) {
@@ -579,12 +650,16 @@ function sendToGoogleSheets(data) {
     '&clicks=' + data.clicks +
     '&harvested=' + data.harvested;
   
-  let img = document.createElement('img');
-  img.src = url;
-  img.style.display = 'none';
-  document.body.appendChild(img);
+  console.log('Sending to Google Sheets:', url);
   
-  console.log('Sending data to Google Sheets...');
+  let iframe = document.createElement('iframe');
+  iframe.style.display = 'none';
+  iframe.src = url;
+  document.body.appendChild(iframe);
+  
+  setTimeout(function() {
+    document.body.removeChild(iframe);
+  }, 3000);
 }
 </script>
 </body>
