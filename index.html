@@ -335,6 +335,7 @@ function drawWeatherForm() {
   fill(255);
   stroke(0);
   strokeWeight(3);
+  noStroke();
   rect(width/2 - boxW/2, height/2 - boxH/2, boxW, boxH, 10);
   
   fill(0);
@@ -375,7 +376,7 @@ function drawWeatherForm() {
     text('Soil: ' + soilMoisture, width/2, height/2 - 125 * scale);
     
     noStroke();
-    textSize(14 * scale);
+    textSize(12 * scale);
     textAlign(LEFT);
     text('Start Time:', width/2 - 140 * scale, height/2 - 80 * scale);
     noStroke();
