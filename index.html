@@ -44,14 +44,43 @@ let weatherEndTime = '';
 let formStep = 0;
 let googleSheetURL = 'https://script.google.com/a/macros/mylasalle.edu.sg/s/AKfycbzVURMhwRJ0g0_lNK30Dwm3hbDuk9O1MgQmG8djoc4Cs5ZQm9Q8a64UEzNDlxWqS0ZXMA/exec';
 
+// Video recording variables
+let isRecording = false;
+let mediaRecorder = null;
+let recordedChunks = [];
+let recordButton = null;
+
+// Fast time for demo (1 minute = 1 hour)
+let useFastTime = true;  // Set to false to use real time
+let fastTimeStart = null;
+
 function setup() {
   createCanvas(windowWidth, windowHeight);
   textFont('Courier');
   checkDailyReset();
+  createRecordButton();
+  fastTimeStart = millis();
+}
+
+function createRecordButton() {
+  recordButton = createButton('⏺ Record');
+  recordButton.position(width - 100, 20);
+  recordButton.style('padding', '10px 15px');
+  recordButton.style('background-color', '#ff4444');
+  recordButton.style('color', 'white');
+  recordButton.style('border', 'none');
+  recordButton.style('border-radius', '5px');
+  recordButton.style('cursor', 'pointer');
+  recordButton.style('font-family', 'Courier');
+  recordButton.style('font-size', '14px');
+  recordButton.mousePressed(toggleRecording);
 }
 
 function windowResized() {
   resizeCanvas(windowWidth, windowHeight);
+  if (recordButton) {
+    recordButton.position(width - 100, 20);
+  }
 }
 
 function draw() {
@@ -83,7 +112,16 @@ function draw() {
 }
 
 function drawDynamicBackground() {
-  let h = hour();
+  let h;
+  
+  if (useFastTime) {
+    // Fast time: 1 minute = 1 hour, full day = 24 minutes
+    let elapsed = millis() - fastTimeStart;
+    let minutesPassed = elapsed / 60000; // Convert to minutes
+    h = floor(minutesPassed) % 24; // Cycle through 0-23 hours
+  } else {
+    h = hour(); // Real time
+  }
   
   if (h >= 6 && h < 12) {
     let t = map(h, 6, 12, 0, 1);
@@ -112,6 +150,15 @@ function drawDynamicBackground() {
   } else {
     fill(240, 240, 255, 180);
     circle(width * 0.85, height * 0.12, min(width, height) * 0.06);
+  }
+  
+  // Show current time for demo
+  if (useFastTime) {
+    fill(255);
+    noStroke();
+    textAlign(LEFT);
+    textSize(12);
+    text('Time: ' + nf(h, 2) + ':00 (Fast Mode)', 20, height - 20);
   }
 }
 
@@ -658,6 +705,62 @@ function sendToGoogleSheets(data) {
   setTimeout(function() {
     document.body.removeChild(iframe);
   }, 3000);
+}
+
+function toggleRecording() {
+  if (!isRecording) {
+    startRecording();
+  } else {
+    stopRecording();
+  }
+}
+
+function startRecording() {
+  recordedChunks = [];
+  
+  let canvas = document.querySelector('canvas');
+  let stream = canvas.captureStream(30); // 30 FPS
+  
+  mediaRecorder = new MediaRecorder(stream, {
+    mimeType: 'video/webm;codecs=vp9',
+    videoBitsPerSecond: 2500000
+  });
+  
+  mediaRecorder.ondataavailable = function(event) {
+    if (event.data.size > 0) {
+      recordedChunks.push(event.data);
+    }
+  };
+  
+  mediaRecorder.onstop = function() {
+    let blob = new Blob(recordedChunks, { type: 'video/webm' });
+    let url = URL.createObjectURL(blob);
+    
+    let a = document.createElement('a');
+    a.href = url;
+    a.download = 'soybean-farm-' + Date.now() + '.webm';
+    a.click();
+    
+    console.log('Video saved!');
+  };
+  
+  mediaRecorder.start();
+  isRecording = true;
+  recordButton.html('⏹ Stop');
+  recordButton.style('background-color', '#44ff44');
+  
+  console.log('Recording started...');
+}
+
+function stopRecording() {
+  if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+    mediaRecorder.stop();
+    isRecording = false;
+    recordButton.html('⏺ Record');
+    recordButton.style('background-color', '#ff4444');
+    
+    console.log('Recording stopped. Downloading...');
+  }
 }
 </script>
 </body>
