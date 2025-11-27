@@ -27,7 +27,7 @@
 let soybeans = [];
 let nitrogen = 0;
 let clicksToday = 0;
-let maxClicksPerDay = 15;
+let maxClicksPerDay = 30;
 let lastResetDate = null;
 let totalHarvested = 0;
 let tempehInProgress = false;
@@ -115,12 +115,13 @@ function drawDynamicBackground() {
   let h;
   
   if (useFastTime) {
-    // Fast time: 1 minute = 1 hour, full day = 24 minutes
+    // Super fast time: full day = 2 minutes (30 seconds per 6-hour period)
+    // This gives 3.5 full cycles in 7 minutes
     let elapsed = millis() - fastTimeStart;
-    let minutesPassed = elapsed / 60000; // Convert to minutes
-    h = floor(minutesPassed) % 24; // Cycle through 0-23 hours
+    let minutesPassed = elapsed / 5000; // 5 seconds = 1 hour, 2 minutes = 24 hours
+    h = floor(minutesPassed) % 24;
   } else {
-    h = hour(); // Real time
+    h = hour();
   }
   
   if (h >= 6 && h < 12) {
